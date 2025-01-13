@@ -4,19 +4,25 @@ server:
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3306/alic?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/alic?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&useSSL=false
     username: root
     password: 1q2w3e4R
     driver-class-name: com.mysql.cj.jdbc.Driver
   mybatis:
-    type-aliases-package=com.eduhk.alic.alicbackend.dao
+    type-aliases-package: com.eduhk.alic.alicbackend.model.entity
+    mapper-locations: com.eduhk.alic.alicbackend.dao
+    configuration:
+      ### 开启打印sql配置
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+      ### 开启驼峰配置
+      map-underscore-to-camel-case: true
   mail:
     #默认的邮件编码
     default-encoding: UTF-8
     # 设置邮箱主机(服务商),这里使用QQ邮件服务器 ---->配置 SMTP 服务器地址
     host: smtp.163.com
     #配置邮箱用户名
-    username: alic_admin@qq.com
+    username: alic_admin@163.com
     #配置密码，注意，不是真正的密码，而是刚刚申请到的授权码
     password:
     #SMTP 服务器的端口
@@ -30,3 +36,8 @@ spring:
           starttls:
             enable: true
             required: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
