@@ -1,0 +1,32 @@
+server:
+  port: 8080 # 应用程序运行端口
+
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/alic?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+    username: root
+    password: 1q2w3e4R
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  mybatis:
+    type-aliases-package=com.eduhk.alic.alicbackend.dao
+  mail:
+    #默认的邮件编码
+    default-encoding: UTF-8
+    # 设置邮箱主机(服务商),这里使用QQ邮件服务器 ---->配置 SMTP 服务器地址
+    host: smtp.163.com
+    #配置邮箱用户名
+    username: alic_admin@qq.com
+    #配置密码，注意，不是真正的密码，而是刚刚申请到的授权码
+    password:
+    #SMTP 服务器的端口
+    port: 587
+    properties:
+      mail:
+        smtp:
+          # 必须进行授权认证，它的目的就是阻止他人任意乱发邮件
+          auth: true
+          #SMTP加密方式:连接到一个TLS保护连接
+          starttls:
+            enable: true
+            required: true
