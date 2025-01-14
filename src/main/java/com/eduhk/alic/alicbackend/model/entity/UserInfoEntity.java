@@ -15,7 +15,7 @@ import java.util.Date;
 public class UserInfoEntity {
     private Long userId; // Primary Key
     private String userEmail; // User email
-    private Integer condition; // Account status: 0 for inactived, 1 for active, 2 for deactivated
+    private Integer userCondition; // Account status: 0 for inactived, 1 for active, 2 for deactivated
     private String userName; // Username
     private String userPortrait; // User profile picture
     private String password; // User password (encrypted storage)

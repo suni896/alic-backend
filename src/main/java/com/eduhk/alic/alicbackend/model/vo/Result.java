@@ -1,6 +1,6 @@
 package com.eduhk.alic.alicbackend.model.vo;
 
-import com.eduhk.alic.alicbackend.constant.ResultCode;
+import com.eduhk.alic.alicbackend.common.constant.ResultCode;
 import lombok.Getter;
 import lombok.Setter;
 

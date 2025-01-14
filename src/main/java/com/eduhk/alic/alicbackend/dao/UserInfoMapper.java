@@ -5,30 +5,30 @@ import org.apache.ibatis.annotations.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 /**
  * @author FuSu
  * @date 2025/1/13 12:37
  */
 @Mapper
-public interface UserInfoMapper {
-    @Insert("INSERT INTO users (user_email, condition, user_name, user_portrait, password, create_time, delete_time, salt) " +
-            "VALUES (${userEmail}, ${condition}, ${userName}, ${userPortrait}, ${password}, ${createTime}, ${deleteTime}, ${salt})")
+public interface UserInfoMapper extends BaseMapper<UserInfoEntity> {
+    @Insert("INSERT INTO user_info (user_email, user_condition, user_name, user_portrait, password, create_time, delete_time, salt) " +
+            "VALUES (#{userEmail}, #{userCondition}, #{userName}, #{userPortrait}, #{password}, #{createTime}, #{deleteTime}, #{salt})")
     @Options(useGeneratedKeys = true, keyProperty = "userId")
     void insertUser(UserInfoEntity user);
 
-    @Select("SELECT * FROM users WHERE user_id = ${userId}")
+    @Select("SELECT * FROM user_info WHERE user_id = #{userId}")
     UserInfoEntity findUserById(Long userId);
 
-    @Select("SELECT * FROM users WHERE user_email = ${userEmail} AND condition = ${condition}")
-    UserInfoEntity findUserByEmailAndCondition(@Param("userEmail") String userEmail, @Param("condition") Integer condition);
+    @Select("SELECT * FROM user_info WHERE user_email = #{userEmail} AND user_condition = #{userCondition}")
+    UserInfoEntity findUserByEmailAndCondition(@Param("userEmail") String userEmail, @Param("userCondition") Integer userCondition);
 
-    @Select("SELECT * FROM users")
+    @Select("SELECT * FROM user_info")
     List<UserInfoEntity> findAllUsers();
 
-    @Update("UPDATE users SET condition = ${condition}, delete_time = ${deleteTime} WHERE user_id = ${userId}")
-    void updateUserStatus(@Param("userId") Long userId, @Param("condition") Integer condition, @Param("deleteTime") LocalDateTime deleteTime);
+    @Update("UPDATE user_info SET user_condition = #{userCondition}, delete_time = #{deleteTime} WHERE user_id = #{userId}")
+    void updateUserStatus(@Param("userId") Long userId, @Param("userCondition") Integer userCondition, @Param("deleteTime") LocalDateTime deleteTime);
 
-    @Delete("DELETE FROM users WHERE user_id = ${userId}")
+    @Delete("DELETE FROM user_info WHERE user_id = #{userId}")
     void deleteUserById(Long userId);
 }

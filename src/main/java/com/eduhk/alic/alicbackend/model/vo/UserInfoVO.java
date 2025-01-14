@@ -1,5 +1,6 @@
 package com.eduhk.alic.alicbackend.model.vo;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Setter
+@Data
 public class UserInfoVO {
     private Long userId; // Primary Key
     private String userEmail; // User email

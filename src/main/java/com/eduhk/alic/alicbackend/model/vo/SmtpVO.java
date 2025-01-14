@@ -1,6 +1,6 @@
 package com.eduhk.alic.alicbackend.model.vo;
 
-import com.eduhk.alic.alicbackend.constant.SmtpTypeEnum;
+import com.eduhk.alic.alicbackend.common.constant.SmtpTypeEnum;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -15,10 +15,10 @@ public class SmtpVO {
     @NonNull
     private String userEmail; // User email
 
-    @NonNull
+
     private String userName;
 
-    @NonNull
+
     private String password;
 
     @NonNull
