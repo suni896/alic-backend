@@ -13,15 +13,15 @@ public enum SmtpTypeEnum {
     /**
      * 注册
      */
-    REGISTERED("1", "chat:code:reg:", 5),
+    REGISTERED("1", "chat:code:reg:", 10),
     /**
      * 登录
      */
-    LOGIN("2", "chat:code:login:", 5),
+    LOGIN("2", "chat:code:login:", 10),
     /**
      * 重置密码
      */
-    RESET("3", "chat:code:forget:", 5),
+    RESET("3", "chat:code:forget:", 10),
     ;
     @EnumValue
     @JsonValue

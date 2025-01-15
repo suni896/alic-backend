@@ -12,10 +12,16 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 @Mapper
 public interface UserInfoMapper extends BaseMapper<UserInfoEntity> {
-    @Insert("INSERT INTO user_info (user_email, user_condition, user_name, user_portrait, password, create_time, delete_time, salt) " +
-            "VALUES (#{userEmail}, #{userCondition}, #{userName}, #{userPortrait}, #{password}, #{createTime}, #{deleteTime}, #{salt})")
+    @Insert("INSERT INTO user_info (user_email, user_condition, user_name, user_portrait, password, create_time, delete_time, update_time, salt) " +
+            "VALUES (#{userEmail}, #{userCondition}, #{userName}, #{userPortrait}, #{password}, #{createTime}, #{deleteTime}, #{updateTime}, #{salt})")
     @Options(useGeneratedKeys = true, keyProperty = "userId")
     void insertUser(UserInfoEntity user);
+
+    @Override
+    @Insert("INSERT INTO user_info (user_email, user_condition, user_name, user_portrait, password, create_time, delete_time, update_time, salt) " +
+            "VALUES (#{userEmail}, #{userCondition}, #{userName}, #{userPortrait}, #{password}, #{createTime}, #{deleteTime}, #{updateTime}, #{salt})")
+    @Options(useGeneratedKeys = true, keyProperty = "userId")
+    int insert(UserInfoEntity entity);
 
     @Select("SELECT * FROM user_info WHERE user_id = #{userId}")
     UserInfoEntity findUserById(Long userId);
@@ -29,6 +35,4 @@ public interface UserInfoMapper extends BaseMapper<UserInfoEntity> {
     @Update("UPDATE user_info SET user_condition = #{userCondition}, delete_time = #{deleteTime} WHERE user_id = #{userId}")
     void updateUserStatus(@Param("userId") Long userId, @Param("userCondition") Integer userCondition, @Param("deleteTime") LocalDateTime deleteTime);
 
-    @Delete("DELETE FROM user_info WHERE user_id = #{userId}")
-    void deleteUserById(Long userId);
 }

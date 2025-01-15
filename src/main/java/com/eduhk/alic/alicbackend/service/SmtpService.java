@@ -46,9 +46,7 @@ public class SmtpService {
         }
 
     }
-    public void sendMail(SmtpVO smtpVO) {
-        // 生成验证码
-        String verfiCode = String.valueOf(RandomUtil.randomInt(100000, 999999));
+    public void sendMail(SmtpVO smtpVO,  String verfiCode) {
         log.info("verfiCode, {}", verfiCode);
         try{
             doSendEmail(sourceMailAddr, smtpVO.getUserEmail(), verfiCode);
