@@ -21,6 +21,7 @@ public enum ResultCode {
     /*参数错误:1001-1999*/
     PARAMS_IS_INVALID(1001, "参数无效"),
     PARAMS_IS_BLANK(1002, "参数为空"),
+    PASSWORD_ERROR(1003, "password error"),
 
     /*用户错误2001-2999*/
     UNREGISTERED_ACCOUNT(2001, "the account is unregistered, please register first"),

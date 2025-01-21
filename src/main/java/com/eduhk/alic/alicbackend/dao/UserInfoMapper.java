@@ -33,6 +33,11 @@ public interface UserInfoMapper extends BaseMapper<UserInfoEntity> {
     List<UserInfoEntity> findAllUsers();
 
     @Update("UPDATE user_info SET user_condition = #{userCondition}, delete_time = #{deleteTime} WHERE user_id = #{userId}")
-    void updateUserStatus(@Param("userId") Long userId, @Param("userCondition") Integer userCondition, @Param("deleteTime") LocalDateTime deleteTime);
+    void deleteUserStatus(@Param("userId") Long userId, @Param("userCondition") Integer userCondition, @Param("deleteTime") LocalDateTime deleteTime);
 
+    @Update("UPDATE user_info SET user_condition = #{userCondition} WHERE user_email = #{userEmail} and user_condition < 100 ")
+    void updateUserStatus(@Param("userEmail") String userEmail, @Param("userCondition") Integer userCondition);
+
+    @Update("UPDATE user_info SET password = #{password}, salt = #{salt} WHERE user_email = #{userEmail} and user_condition < 100")
+    void updatePassword(@Param("password") String password, @Param("salt") String salt, @Param("userEmail") String userEmail);
 }

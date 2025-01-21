@@ -4,7 +4,10 @@ server:
 logging:
   level:
     com.example.mapper: debug
-
+jwt:
+  config:
+    key: alic_salt_1q2w3e4R!@#$
+    expire: 14400 # 过期时间，单位秒, 4小时
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
