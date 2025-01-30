@@ -8,13 +8,14 @@ import com.eduhk.alic.alicbackend.model.vo.*;
 import com.eduhk.alic.alicbackend.service.LogInService;
 import com.eduhk.alic.alicbackend.service.SmtpService;
 import com.eduhk.alic.alicbackend.service.UserInfoService;
-import com.eduhk.alic.alicbackend.utils.JwtUtils;
 import com.eduhk.alic.alicbackend.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class AuthController {
 
     private static String verfiCodeCachePrefix = "VERFI_CODE_";
+    private static String verifiTokenCachePrefix = "VERIFI_TOKEN_";
 
     @Resource
     UserInfoService userInfoService;
@@ -55,7 +57,6 @@ public class AuthController {
                     return ResultResp.failure(ResultCode.REGISTERED_ACCOUNT);
                 }
                 //记录账号信息到db
-                //TODO  insert or update
                 UserInfoEntity userUnactive = userInfoService.getUnactiveUserInfoByEmail(smtpVO.getUserEmail());
                 if (userUnactive == null) {
                     userInfoService.saveUserInfo(smtpVO);
@@ -68,21 +69,22 @@ public class AuthController {
         log.info("verfiCode,{}", verfiCode);
 
         //发送验证码
-//        try {
-//            smtpService.sendMail(smtpVO, verfiCode);
-//        } catch (Exception e) {
-//            return ResultResp.failure(ResultCode.CODE_SEND_ERROR);
-//        }
+        try {
+            smtpService.sendMail(smtpVO, verfiCode);
+        } catch (Exception e) {
+            return ResultResp.failure(ResultCode.CODE_SEND_ERROR);
+        }
 
         //redis记录验证码和生成时间 以备验证
         //TODO key的格式，设计+记录一下
-        //TODO 可能要改成code作为key
-        //TODO 如果发多次验证码是不是要强制过期之前的验证码？
-        String cacheKey = verfiCodeCachePrefix + smtpVO.getType().getPrefix()+ verfiCode;
-        log.info("cacheKey,{}", cacheKey);
-        RedisUtils.set(cacheKey, smtpVO.getUserEmail(), 10, TimeUnit.MINUTES);
 
-        return ResultResp.success();
+        String cacheKey = verfiCodeCachePrefix + smtpVO.getType().getPrefix()+ smtpVO.getUserEmail();
+        log.info("cacheKey,{}", cacheKey);
+        RedisUtils.delete(cacheKey);
+        RedisUtils.set(cacheKey, verfiCode, 10, TimeUnit.MINUTES);
+        Map<String, String> resp = new HashMap<>();
+        resp.put("email", smtpVO.getUserEmail());
+        return ResultResp.success(resp);
     }
     //登录
     //1. 校验账号密码
@@ -111,61 +113,77 @@ public class AuthController {
             log.info("log in key,{}", logInKey);
             RedisUtils.delete(logInKey);
             RedisUtils.set(logInKey, token, 4, TimeUnit.HOURS);
-            return ResultResp.success(token);
+
+            Map<String, String> resp = new HashMap<>();
+            resp.put("Bearer Token", token);
+            return ResultResp.success(resp);
         }else {
             return ResultResp.failure(ResultCode.PASSWORD_ERROR);
         }
     }
 
-    //注册
-    @PostMapping("/register")
-    public Result register (@Validated @RequestBody VerifiCodeVO verifiCodeVO) {
+//    //注册
+//    @PostMapping("/register")
+//    public Result register (@Validated @RequestBody VerifiCodeVO verifiCodeVO) {
+//
+//        log.info("VerfiCodeVO:{}", verifiCodeVO);
+//        //1. 校验验证码
+//        String cacheKey = verfiCodeCachePrefix + verifiCodeVO.getType().getPrefix()+ verifiCodeVO.getEmail();
+//        log.info("cacheKey,{}", cacheKey);
+//        String verificode = RedisUtils.get(cacheKey);
+//        if (verificode == null || !verificode.equals(verifiCodeVO.getVerifiCode())) {
+//            return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
+//        }
+//        UserInfoEntity user = userInfoService.getUnactiveUserInfoByEmail(verifiCodeVO.getEmail());
+//        if (user == null) {
+//            return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
+//        }
+//        //2. 更新账号信息，状态改成1
+//        userInfoService.activeAccount(verifiCodeVO.getEmail());
+//        return ResultResp.success();
+//    }
 
-        log.info("VerfiCodeVO:{}", verifiCodeVO);
-        //1. 校验验证码
-        String cacheKey = verfiCodeCachePrefix + verifiCodeVO.getType().getPrefix()+ verifiCodeVO.getVerifiCode();
-        log.info("cacheKey,{}", cacheKey);
-        String email = RedisUtils.get(cacheKey);
-        if (email == null) {
-            return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
-        }
-        UserInfoEntity user = userInfoService.getUnactiveUserInfoByEmail(email);
-        if (user == null) {
-            return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
-        }
-        //2. 更新账号信息，状态改成1
-        userInfoService.activeAccount(email);
-        return ResultResp.success();
-    }
-
-    @PostMapping("/verifycode")
+    @PostMapping("/verify_code")
     public Result verifycode (@Validated @RequestBody VerifiCodeVO verifiCodeVO) {
 
         log.info("VerfiCodeVO:{}", verifiCodeVO);
         //1. 校验验证码
-        String cacheKey = verfiCodeCachePrefix + verifiCodeVO.getType().getPrefix() + verifiCodeVO.getVerifiCode();
+        String cacheKey = verfiCodeCachePrefix + verifiCodeVO.getType().getPrefix() + verifiCodeVO.getEmail();
         log.info("cacheKey,{}", cacheKey);
-        String email = RedisUtils.get(cacheKey);
-        if (email == null) {
+        String verificode = RedisUtils.get(cacheKey);
+        log.info("verificode,{}", verificode);
+        if (verificode == null || !verificode.equals(verifiCodeVO.getVerifiCode())) {
             return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
         }
+
         switch (verifiCodeVO.getType()){
 //            case LOGIN -> {}
             case RESET -> {
-                UserInfoEntity userActive = userInfoService.getActiveUserInfoByEmail(email);
+                UserInfoEntity userActive = userInfoService.getActiveUserInfoByEmail(verifiCodeVO.getEmail());
                 if (userActive == null) {
                     return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
                 }
                 //TODO这里可能要加一个验证码给前端，防止被人篡改
-                return ResultResp.success(email);
+                String salt = RandomUtil.randomString(6);
+                String token = SecureUtil.md5(verifiCodeVO.getEmail()+salt);
+                String cacheKeyToken = verifiTokenCachePrefix + verifiCodeVO.getType().getPrefix() + verifiCodeVO.getEmail();
+                log.info("cacheKey,{}", cacheKeyToken);
+                RedisUtils.set(cacheKeyToken, token, 10, TimeUnit.MINUTES);
+                Map<String, String> resp = new HashMap<>();
+                resp.put("token", token);
+                resp.put("email", verifiCodeVO.getEmail());
+                return ResultResp.success(resp);
             }
             case REGISTERED -> {
-                UserInfoEntity userUnactive = userInfoService.getUnactiveUserInfoByEmail(email);
+                UserInfoEntity userUnactive = userInfoService.getUnactiveUserInfoByEmail(verifiCodeVO.getEmail());
                 if (userUnactive == null) {
                     return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
                 }
                 //2. 更新账号信息，状态改成1
-                userInfoService.activeAccount(email);
+                userInfoService.activeAccount(verifiCodeVO.getEmail());
+                Map<String, String> resp = new HashMap<>();
+                resp.put("email", verifiCodeVO.getEmail());
+                return ResultResp.success(resp);
             }
         }
         return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
@@ -176,6 +194,11 @@ public class AuthController {
 
         log.info("ResetVO:{}", resetVO);
         //TODO 1. 校验校验码
+        String cacheKeyToken = verifiTokenCachePrefix + resetVO.getType().getPrefix() + resetVO.getUserEmail();
+        String token = RedisUtils.get(cacheKeyToken);
+        if (token == null || !token.equals(resetVO.getToken())) {
+            return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
+        }
         //2. 重置密码
         userInfoService.resetPassword(resetVO);
         return ResultResp.success();
@@ -183,11 +206,9 @@ public class AuthController {
 
     //登出
     @PostMapping("/logout")
-    public Result logout (@RequestHeader("Authorization") String token) {
-        log.info("Logout");
-        String jwtToken = token.substring(7);
-        String userId = JwtUtils.parseTokenUserId(jwtToken);
-        RedisUtils.delete(userId);
+    public Result logout (@CurrentUser Long userId) {
+        log.info("Logout:{}", userId);
+        RedisUtils.delete(String.valueOf(userId));
         return ResultResp.success();
     }
 }

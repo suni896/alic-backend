@@ -16,6 +16,8 @@ public class VerifiCodeVO {
     @NonNull
     private String verifiCode;
 
+    private String email;
+
     @NonNull
     private SmtpTypeEnum type;
 }

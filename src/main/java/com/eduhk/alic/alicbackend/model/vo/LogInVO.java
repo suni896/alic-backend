@@ -18,6 +18,5 @@ public class LogInVO {
 
     private String password;
 
-    @NonNull
-    private SmtpTypeEnum type;
+
 }

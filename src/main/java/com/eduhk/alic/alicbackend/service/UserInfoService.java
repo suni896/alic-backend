@@ -3,9 +3,11 @@ package com.eduhk.alic.alicbackend.service;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.eduhk.alic.alicbackend.dao.UserInfoMapper;
+import com.eduhk.alic.alicbackend.model.entity.PasswordEntity;
 import com.eduhk.alic.alicbackend.model.entity.UserInfoEntity;
 import com.eduhk.alic.alicbackend.model.vo.ResetVO;
 import com.eduhk.alic.alicbackend.model.vo.SmtpVO;
+import com.eduhk.alic.alicbackend.utils.Md5Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,14 +35,14 @@ public class UserInfoService {
     public void saveUserInfo(SmtpVO smtpVO) {
 
         UserInfoEntity userInfoEntity = new UserInfoEntity();
+
         userInfoEntity.setUserEmail(smtpVO.getUserEmail());
         userInfoEntity.setUserName(smtpVO.getUserName());
-        // 生成随机盐
-        String salt = RandomUtil.randomString(6);
-        userInfoEntity.setSalt(salt);
-        // 密码加盐后md5加密
-        String md5Pwd = SecureUtil.md5(smtpVO.getPassword()+salt);
-        userInfoEntity.setPassword(md5Pwd);
+
+        PasswordEntity passwordEntity = Md5Utils.addSalt(smtpVO.getPassword());
+        userInfoEntity.setPassword(passwordEntity.getPassword());
+        userInfoEntity.setSalt(passwordEntity.getSalt());
+
         userInfoEntity.setUserCondition(0);
         //TODO 头像生成
         userInfoEntity.setUserPortrait("");

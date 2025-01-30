@@ -4,6 +4,7 @@ import com.eduhk.alic.alicbackend.common.constant.ResultCode;
 import com.eduhk.alic.alicbackend.model.vo.Result;
 import com.eduhk.alic.alicbackend.model.vo.ResultResp;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -22,6 +23,7 @@ public class GlobalExceptionHandler {
         log.error("发生业务异常！原因是：{}", e.getMessage());
         return ResultResp.failure(ResultCode.INTERNAL_SERVER_ERROR);
     }
+
 
     /**
      * 处理空指针的异常
@@ -48,5 +50,12 @@ public class GlobalExceptionHandler {
         log.error("未知异常！原因是:", e);
         return ResultResp.failure(ResultCode.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(value = DuplicateKeyException.class)
+    public Result exceptionHandler(HttpServletRequest req, DuplicateKeyException e) {
+        log.error("发生DuplicateKeyException！原因是:", e);
+        return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
+    }
+
 
 }

@@ -36,21 +36,12 @@ public class SmtpService {
                 "ALIC Support Team" );
         //收件人
         mailMessage.setTo(targetEmailAddr);
-        try{
-            javaMailSender.send(mailMessage);
-        }catch (Exception e){
-            log.error(e.getMessage());
-        }
+        javaMailSender.send(mailMessage);
 
     }
     public void sendMail(SmtpVO smtpVO,  String verfiCode) {
         log.info("verfiCode, {}", verfiCode);
-        try{
-            doSendEmail(sourceMailAddr, smtpVO.getUserEmail(), verfiCode);
-        } catch (Exception e){
-            log.error(e.getMessage());
-
-        }
+        doSendEmail(sourceMailAddr, smtpVO.getUserEmail(), verfiCode);
 
     }
 }

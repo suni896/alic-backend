@@ -78,9 +78,9 @@ public class JwtUtils {
         }
     }
 
-    public static String parseTokenUserId(String token) {
+    public static Long parseTokenUserId(String token) {
         JSONObject payLoadJson = JWTUtil.parseToken(token).setKey(JwtSalt.getBytes()).getPayload().getClaimsJson();
-        return payLoadJson.getStr("userId");
+        return payLoadJson.getLong("userId");
     }
 
     public static String parseTokenUserEmail(String token) {

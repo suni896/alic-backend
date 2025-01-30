@@ -61,7 +61,7 @@ public class JwtFilter implements Filter {
             log.info("token 验证失败，直接返回");
             return;
         }
-        String userId = JwtUtils.parseTokenUserId(jwtToken);
+        String userId = JwtUtils.parseTokenUserId(jwtToken).toString();
         String token = RedisUtils.get(userId);
         // 判断token是否存在，不存在代表登陆超时
         if (StringUtils.isEmpty(token)) {

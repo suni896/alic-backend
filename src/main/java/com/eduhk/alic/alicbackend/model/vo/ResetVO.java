@@ -18,6 +18,8 @@ public class ResetVO {
 
     private String newPassword;
 
+    private String token;
+
     @NonNull
     private SmtpTypeEnum type;
 }
