@@ -55,10 +55,11 @@ public interface ChatTagGroupRelationMapper extends BaseMapper<ChatTagGroupRelat
     @Delete("""
         <script>
         DELETE FROM chat_tag_group_relation
-        WHERE (tag_id, group_id) IN
+        WHERE (tag_id, group_id) IN 
         <foreach collection="relations" item="relation" open="(" separator="),(" close=")">
-            #{relation.tagId}, #{relation.groupId}
+           ( #{relation.tagId}, #{relation.groupId})
         </foreach>
+        
         </script>
     """)
     int batchHardDeleteRelations(@Param("relations") List<ChatTagGroupRelationEntity> relations);

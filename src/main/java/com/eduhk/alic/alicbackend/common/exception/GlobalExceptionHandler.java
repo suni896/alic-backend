@@ -18,11 +18,11 @@ import javax.servlet.http.HttpServletRequest;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-    @ExceptionHandler(value = BaseException.class)
-    public Result baseExceptionHandler(HttpServletRequest req, BaseException e) {
-        log.error("发生业务异常！原因是：{}", e.getMessage());
-        return ResultResp.failure(ResultCode.INTERNAL_SERVER_ERROR);
-    }
+//    @ExceptionHandler(value = BaseException.class)
+//    public Result baseExceptionHandler(HttpServletRequest req, BaseException e) {
+//        log.error("发生业务异常！原因是：{}", e.getMessage());
+//        return ResultResp.failure(ResultCode.INTERNAL_SERVER_ERROR);
+//    }
 
 
     /**
@@ -55,6 +55,12 @@ public class GlobalExceptionHandler {
     public Result exceptionHandler(HttpServletRequest req, DuplicateKeyException e) {
         log.error("发生DuplicateKeyException！原因是:", e);
         return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
+    }
+
+    @ExceptionHandler(value = BaseException.class)
+    public Result exceptionHandler(HttpServletRequest req, BaseException e) {
+        log.error("BaseException！原因是:", e);
+        return ResultResp.failure(e.getErrorCode());
     }
 
 

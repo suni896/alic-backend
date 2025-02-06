@@ -20,7 +20,7 @@ public interface UserInfoMapper extends BaseMapper<UserInfoEntity> {
     @Override
     @Insert("INSERT INTO user_info (user_email, user_condition, user_name, user_portrait, password, create_time, delete_time, update_time, salt) " +
             "VALUES (#{userEmail}, #{userCondition}, #{userName}, #{userPortrait}, #{password}, #{createTime}, #{deleteTime}, #{updateTime}, #{salt})")
-    @Options(useGeneratedKeys = true, keyProperty = "userId")
+    @Options(useGeneratedKeys = true, keyProperty = "userId", keyColumn = "user_id")
     int insert(UserInfoEntity entity);
 
     @Select("SELECT * FROM user_info WHERE user_id = #{userId}")
@@ -40,4 +40,7 @@ public interface UserInfoMapper extends BaseMapper<UserInfoEntity> {
 
     @Update("UPDATE user_info SET password = #{password}, salt = #{salt} WHERE user_email = #{userEmail} and user_condition < 100")
     void updatePassword(@Param("password") String password, @Param("salt") String salt, @Param("userEmail") String userEmail);
+
+    @Update("UPDATE user_info SET user_portrait = #{userPortrait} WHERE user_id = #{userId}")
+    void updatePortrait(@Param("userId") Long userId, @Param("userPortrait") byte[] userPortrait);
 }

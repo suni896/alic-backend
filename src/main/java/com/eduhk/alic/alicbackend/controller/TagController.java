@@ -2,6 +2,7 @@ package com.eduhk.alic.alicbackend.controller;
 
 import com.eduhk.alic.alicbackend.model.vo.*;
 import com.eduhk.alic.alicbackend.service.TagManageService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -20,15 +21,17 @@ public class TagController {
     TagManageService tagManageService;
 
     @PostMapping("/add_tag")
-    public Result addTag(@Validated @RequestBody String TagName, @CurrentUser Long userId) {
-        Long tagId = tagManageService.createNewTag(TagName, userId);
-        return ResultResp.success(tagId);
+    public Result addTag(@Validated @RequestBody TagNameVO TagName, @CurrentUser Long userId) {
+        Long tagId = tagManageService.createNewTag(TagName.getTagName(), userId);
+        TagIdVO tagIdVO = new TagIdVO();
+        tagIdVO.setTagId(tagId);
+        return ResultResp.success(tagIdVO);
     }
 
-    @GetMapping("/delete_tag")
-    public Result deleteTag(@Validated @RequestBody Long tagId, @CurrentUser Long userId) {
-        tagManageService.verifyUserAdmission(userId, tagId);
-        tagManageService.deleteTagById(tagId);
+    @PostMapping("/delete_tag")
+    public Result deleteTag(@Validated @RequestBody TagIdVO tagId, @CurrentUser Long userId) {
+        tagManageService.verifyUserAdmission(userId, tagId.getTagId());
+        tagManageService.deleteTagById(tagId.getTagId());
         return ResultResp.success(tagId);
     }
 
@@ -53,7 +56,7 @@ public class TagController {
     }
 
     @GetMapping("/get_tag_info")
-    public Result getTagInfo(@Validated @RequestBody Long tagId, @CurrentUser Long userId) {
+    public Result getTagInfo(@Validated @RequestParam Long tagId, @CurrentUser Long userId) {
         tagManageService.verifyUserAdmission(userId, tagId);
         List<TagGroupVO> tagGroupVOS = tagManageService.getGroupBindTagList(tagId);
         return ResultResp.success(tagGroupVOS);

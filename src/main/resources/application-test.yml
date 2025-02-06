@@ -1,5 +1,15 @@
 server:
-  port: 8080 # 应用程序运行端口
+  #port: 8080 # 应用程序运行端口
+  #https默认端口：443，http默认端口：80
+  port: 443
+
+  #开启https，配置跟证书一一对应
+  ssl:
+    enabled: true
+    key-store: classpath:alic_https_rsa.keystore  # 证书文件路径
+    key-store-password: 123456   # 证书密码
+    key-store-type: PKCS12
+    enabled-protocols: TLSv1.2,TLSv1.3
 
 logging:
   level:
@@ -23,6 +33,7 @@ spring:
       log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
       ### 开启驼峰配置
       map-underscore-to-camel-case: true
+      useGeneratedKeys: true
   mail:
     #默认的邮件编码
     default-encoding: UTF-8

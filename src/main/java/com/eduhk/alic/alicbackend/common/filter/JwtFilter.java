@@ -1,14 +1,9 @@
 package com.eduhk.alic.alicbackend.common.filter;
 
-
 import com.eduhk.alic.alicbackend.utils.JwtUtils;
 import com.eduhk.alic.alicbackend.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.http.HttpMethod;
-import org.springframework.util.StringUtils;
-import org.springframework.web.context.support.WebApplicationContextUtils;
-
 import javax.servlet.*;
 import java.io.IOException;
 import javax.servlet.annotation.WebFilter;
@@ -37,12 +32,12 @@ public class JwtFilter implements Filter {
 //            }
 //        }
         if (url.contains("/auth") || url.contains("/swagger-ui")) {
-            chain.doFilter(request,response);
+            chain.doFilter(httpServletRequest,httpServletResponse);
             return;
         }
         //处理跨域问题，跨域的请求首先会发一个options类型的请求
         if (httpServletRequest.getMethod().equals(HttpMethod.OPTIONS.name())) {
-            chain.doFilter(request, response);
+            chain.doFilter(httpServletRequest,httpServletResponse);
         }
         String authHeader = httpServletRequest.getHeader("Authorization");
         if (authHeader == null) {
@@ -55,22 +50,21 @@ public class JwtFilter implements Filter {
 //            RedisUtils redisService = (RedisUtils) factory.getBean("redisUtils");
 //            String authorization = httpServletRequest.getHeader(GlobalConfig.TOKEN_NAME);
         boolean validate = JwtUtils.validate(jwtToken);
-        if (validate) {
-            chain.doFilter(request, response);
-        } else {
+        if (!validate) {
             log.info("token 验证失败，直接返回");
             return;
         }
         String userId = JwtUtils.parseTokenUserId(jwtToken).toString();
         String token = RedisUtils.get(userId);
-        // 判断token是否存在，不存在代表登陆超时
-        if (StringUtils.isEmpty(token)) {
+        if (token == null || !token.equalsIgnoreCase(jwtToken)) {
+            log.info("token 不存在或不匹配，直接返回");
+            // 设置 HTTP 响应状态码，表示未授权
+            httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+            // 直接返回响应，防止继续执行
+            httpServletResponse.getWriter().write("Unauthorized access");
+            httpServletResponse.getWriter().flush();
             return;
-        } else {
-            // 判断token是否相等，不相等代表在其他地方登录
-            if (!token.equalsIgnoreCase(jwtToken)) {
-                return;
-            }
         }
         chain.doFilter(httpServletRequest, httpServletResponse);
 

@@ -1,13 +1,8 @@
 package com.eduhk.alic.alicbackend.model.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -16,12 +11,14 @@ import java.util.Date;
  */
 @Getter
 @Setter
+@TableName("user_info")
 public class UserInfoEntity {
+    @TableId(value = "user_id", type = IdType.AUTO)
     private Long userId; // Primary Key
     private String userEmail; // User email
     private Integer userCondition; // Account status: 0 for inactived, 1 for active, 2 for deactivated
     private String userName; // Username
-    private String userPortrait; // User profile picture
+    private byte[] userPortrait; // User profile picture
     private String password; // User password (encrypted storage)
 
     @TableField(value = "create_time",fill = FieldFill.INSERT)

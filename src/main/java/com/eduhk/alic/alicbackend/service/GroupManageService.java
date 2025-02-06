@@ -1,5 +1,6 @@
 package com.eduhk.alic.alicbackend.service;
 
+import com.eduhk.alic.alicbackend.common.constant.GroupMemberType;
 import com.eduhk.alic.alicbackend.dao.ChatGroupBotMapper;
 import com.eduhk.alic.alicbackend.dao.GroupInfoMapper;
 import com.eduhk.alic.alicbackend.model.entity.ChatBotInfoEntity;
@@ -10,6 +11,7 @@ import com.eduhk.alic.alicbackend.utils.Md5Utils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -64,8 +66,17 @@ public class GroupManageService {
         chatGroupBotMapper.insertBatch(chatBotInfoEntities);
     }
 
-    public List<ChatBotInvokeVO> getGroupChatBotList(int groupId) {
-        List<ChatBotInfoEntity> chatBotInfoEntities = chatGroupBotMapper.selectByGroupId((long) groupId);
+    public List<ChatBotInvokeVO> getGroupChatBotList(long groupId, GroupMemberType type) {
+        List<ChatBotInfoEntity> chatBotInfoEntities = new ArrayList<>();
+        switch (type) {
+            case ADMIN -> {
+                chatBotInfoEntities = chatGroupBotMapper.selectByGroupId(groupId);
+            }
+            case MEMBER -> {
+                chatBotInfoEntities = chatGroupBotMapper.selectByGroupIdMember(groupId);
+            }
+        }
+
         List<ChatBotInvokeVO> chatBotInvokeVOS = chatBotInfoEntities.stream().map(
                 vo -> {
                     ChatBotInvokeVO chatBotDemonVO = new ChatBotInvokeVO();

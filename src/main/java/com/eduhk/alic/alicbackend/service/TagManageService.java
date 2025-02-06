@@ -1,5 +1,7 @@
 package com.eduhk.alic.alicbackend.service;
 
+import com.eduhk.alic.alicbackend.common.constant.ResultCode;
+import com.eduhk.alic.alicbackend.common.exception.BaseException;
 import com.eduhk.alic.alicbackend.dao.ChatTagGroupRelationMapper;
 import com.eduhk.alic.alicbackend.dao.GroupInfoMapper;
 import com.eduhk.alic.alicbackend.dao.TagInfoMapper;
@@ -12,10 +14,8 @@ import com.eduhk.alic.alicbackend.model.vo.TagInfoVO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author FuSu
@@ -36,8 +36,8 @@ public class TagManageService {
         TagInfoEntity tagInfoEntity = new TagInfoEntity();
         tagInfoEntity.setTagName(tagName);
         tagInfoEntity.setCreateUser(userId);
-        long tagId = tagInfoMapper.insert(tagInfoEntity);
-        return tagId;
+        tagInfoMapper.insert(tagInfoEntity);
+        return tagInfoEntity.getTagId();
     }
 
     public void deleteTagById(Long tagId) {
@@ -46,8 +46,11 @@ public class TagManageService {
 
     public void verifyUserAdmission(Long userId, Long tagId) {
         TagInfoEntity tagInfoEntity = tagInfoMapper.selectById(tagId);
+        if (tagInfoEntity == null) {
+            throw new BaseException(ResultCode.PARAMS_IS_INVALID);
+        }
         if (!Objects.equals(tagInfoEntity.getCreateUser(), userId)) {
-            throw new RuntimeException("Permission denied");
+            throw new BaseException(ResultCode.UNAUTHORIZED);
         }
     }
 
@@ -95,7 +98,8 @@ public class TagManageService {
             tagGroupVO.setGroupName(groupInfoEntity.getGroupName());
             tagGroupVO.setGroupId(Long.valueOf(groupInfoEntity.getGroupId()));
             tagGroupVO.setGroupPortrait(groupInfoEntity.getGroupPortrait());
-            tagGroupVO.setGroupName(groupInfoEntity.getGroupName());
+            tagGroupVO.setGroupAdmin(groupInfoEntity.getGroupAdmin());
+            tagGroupVO.setGroupDescription(groupInfoEntity.getGroupDescription());
             return tagGroupVO;
         }).toList();
         return tagGroupVOS;

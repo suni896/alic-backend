@@ -35,6 +35,10 @@ public interface ChatGroupBotMapper extends BaseMapper<ChatBotInfoEntity> {
     @Select("SELECT * FROM chat_group_bot WHERE group_id = #{groupId}")
     List<ChatBotInfoEntity> selectByGroupId(@Param("groupId") Long groupId);
 
+    @Select("SELECT * FROM chat_group_bot WHERE group_id = #{groupId} and access_type = 1")
+    List<ChatBotInfoEntity> selectByGroupIdMember(@Param("groupId") Long groupId);
+
+
     @Update("UPDATE chat_group_bot SET bot_name = #{botName}, bot_prompt = #{botPrompt}, bot_context = #{botContext}, " +
             "access_type = #{accessType}, update_time = #{updateTime}, delete_time = #{deleteTime} " +
             "WHERE bot_id = #{botId}")

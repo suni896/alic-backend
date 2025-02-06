@@ -1,5 +1,15 @@
 server:
-  port: 8080 # 应用程序运行端口
+  #port: 8080 # 应用程序运行端口
+  #https默认端口：443，http默认端口：80
+  port: 443
+
+  ssl:
+    enabled: true
+    key-store: classpath:alic_https_rsa.keystore  # 证书文件路径
+    key-store-password: 123456   # 证书密码
+    key-store-type: PKCS12
+    enabled-protocols: TLSv1.2,TLSv1.3
+
 
 logging:
   level:

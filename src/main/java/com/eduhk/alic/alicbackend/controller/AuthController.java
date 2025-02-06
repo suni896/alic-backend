@@ -163,7 +163,6 @@ public class AuthController {
                 if (userActive == null) {
                     return ResultResp.failure(ResultCode.PARAMS_IS_INVALID);
                 }
-                //TODO这里可能要加一个验证码给前端，防止被人篡改
                 String salt = RandomUtil.randomString(6);
                 String token = SecureUtil.md5(verifiCodeVO.getEmail()+salt);
                 String cacheKeyToken = verifiTokenCachePrefix + verifiCodeVO.getType().getPrefix() + verifiCodeVO.getEmail();
@@ -204,11 +203,4 @@ public class AuthController {
         return ResultResp.success();
     }
 
-    //登出
-    @PostMapping("/logout")
-    public Result logout (@CurrentUser Long userId) {
-        log.info("Logout:{}", userId);
-        RedisUtils.delete(String.valueOf(userId));
-        return ResultResp.success();
-    }
 }

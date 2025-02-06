@@ -1,7 +1,6 @@
 package com.eduhk.alic.alicbackend.model.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.util.Date;
@@ -11,7 +10,9 @@ import java.util.Date;
  * @date 2025/1/21 15:49
  */
 @Data
+@TableName("chat_tag")
 public class TagInfoEntity {
+    @TableId(value = "tag_id", type = IdType.AUTO)
     private Long tagId;          // Tag ID
     private Long createUser;     // Tag owner
     private String tagName;      // Tag name

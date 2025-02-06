@@ -7,10 +7,17 @@ import com.eduhk.alic.alicbackend.model.entity.PasswordEntity;
 import com.eduhk.alic.alicbackend.model.entity.UserInfoEntity;
 import com.eduhk.alic.alicbackend.model.vo.ResetVO;
 import com.eduhk.alic.alicbackend.model.vo.SmtpVO;
+import com.eduhk.alic.alicbackend.utils.AvatarUtils;
 import com.eduhk.alic.alicbackend.utils.Md5Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * @author FuSu
@@ -44,10 +51,26 @@ public class UserInfoService {
         userInfoEntity.setSalt(passwordEntity.getSalt());
 
         userInfoEntity.setUserCondition(0);
-        //TODO 头像生成
-        userInfoEntity.setUserPortrait("");
+        long userId = userInfoMapper.insert(userInfoEntity);
+        saveAvatarAsync(smtpVO.getUserName(), userInfoEntity.getUserId());
+    }
 
-        userInfoMapper.insert(userInfoEntity);
+    @Async
+    public void saveAvatarAsync(String userName, Long userId) {
+        System.out.println("userId: "+userId);
+        try {
+            BufferedImage avatar = AvatarUtils.generateImg(userName);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(avatar, "png", baos);
+            byte[] imageBytes = baos.toByteArray();
+
+            // **更新数据库**
+
+            userInfoMapper.updatePortrait(userId, imageBytes);
+
+        } catch (IOException e) {
+            log.error("头像生成失败: " + e.getMessage(), e);
+        }
     }
 
     public void activeAccount(String email) {
