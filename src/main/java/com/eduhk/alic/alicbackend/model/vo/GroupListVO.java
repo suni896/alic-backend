@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 public class GroupListVO {
 
-    GroupDemonTypeEnum groupDemonTypeEnum;
+    private GroupDemonTypeEnum groupDemonTypeEnum;
 
-    String searchKey;
+    private String searchKey;
 }

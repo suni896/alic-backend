@@ -3,6 +3,7 @@ package com.eduhk.alic.alicbackend.service;
 import cn.hutool.crypto.SecureUtil;
 import com.eduhk.alic.alicbackend.common.constant.GroupMemberType;
 import com.eduhk.alic.alicbackend.common.constant.ResultCode;
+import com.eduhk.alic.alicbackend.common.exception.BaseException;
 import com.eduhk.alic.alicbackend.dao.ChatGroupUserMapper;
 import com.eduhk.alic.alicbackend.dao.GroupInfoMapper;
 import com.eduhk.alic.alicbackend.dao.UserInfoMapper;
@@ -56,11 +57,11 @@ public class GroupUserService {
         // 验证群组是否存在
         GroupInfoEntity groupInfoEntity = groupInfoMapper.selectById(groupJoinVO.getGroupId());
         if (groupInfoEntity == null) {
-            throw new RuntimeException(ResultCode.GROUP_NOT_EXIST.getMessage());
+            throw new BaseException(ResultCode.GROUP_NOT_EXIST);
         }
         //验证是谁发起的
         if (!Objects.equals(operatorId, groupJoinVO.getJoinMemberID()) && !Objects.equals(operatorId, groupInfoEntity.getGroupAdmin())) {
-            throw new RuntimeException(ResultCode.NO_AUTH.getMessage());
+            throw new BaseException(ResultCode.NO_AUTH);
 
         }
         // 验证群组类型
@@ -71,7 +72,7 @@ public class GroupUserService {
             String md5Pwd = SecureUtil.md5(groupJoinVO.getPassword()+salt);
             // 校验密码
             if (!groupInfoEntity.getPassword().equals(md5Pwd)){
-                throw new RuntimeException(ResultCode.PASSWORD_ERROR.getMessage());
+                throw new BaseException(ResultCode.PASSWORD_ERROR);
             }
         }
     }
@@ -80,11 +81,11 @@ public class GroupUserService {
         // 验证群组是否存在
         GroupInfoEntity groupInfoEntity = groupInfoMapper.selectById(groupRemoveVO.getGroupId());
         if (groupInfoEntity == null) {
-            throw new RuntimeException(ResultCode.GROUP_NOT_EXIST.getMessage());
+            throw new BaseException(ResultCode.GROUP_NOT_EXIST);
         }
         //验证是谁发起的
         if (!Objects.equals(operatorId, groupRemoveVO.getRemoveMemberId()) && !Objects.equals(operatorId, groupInfoEntity.getGroupAdmin())) {
-            throw new RuntimeException(ResultCode.NO_AUTH.getMessage());
+            throw new BaseException(ResultCode.NO_AUTH);
 
         }
     }
@@ -93,7 +94,7 @@ public class GroupUserService {
         // 验证群组是否存在
         GroupInfoEntity groupInfoEntity = groupInfoMapper.selectById(groupId);
         if (groupInfoEntity == null) {
-            throw new RuntimeException(ResultCode.GROUP_NOT_EXIST.getMessage());
+            throw new BaseException(ResultCode.GROUP_NOT_EXIST);
         }
         if (!Objects.equals(userId, groupInfoEntity.getGroupAdmin())) {
             return GroupMemberType.ADMIN;
@@ -112,24 +113,4 @@ public class GroupUserService {
         chatGroupUserMapper.deleteUserGroupRelation(userId, groupId);
     }
 
-    public UserInfoVO getUserInfo(Long userId) {
-        UserInfoVO userInfoVO = new UserInfoVO();
-        UserInfoEntity userInfoEntity = userInfoMapper.findUserById(userId);
-
-        userInfoVO.setUserEmail(userInfoEntity.getUserEmail());
-        userInfoVO.setUserName(userInfoEntity.getUserName());
-        userInfoVO.setUserId(userInfoEntity.getUserId());
-
-        ByteArrayInputStream bais = new ByteArrayInputStream(userInfoEntity.getUserPortrait());
-        BufferedImage image = null;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try{
-            image =  ImageIO.read(bais);
-            ImageIO.write(image, "png", baos);
-        }catch (IOException ignored){
-            //TODO
-        }
-        userInfoVO.setUserPortrait(Base64.getEncoder().encodeToString(baos.toByteArray()));
-        return userInfoVO;
-    }
 }

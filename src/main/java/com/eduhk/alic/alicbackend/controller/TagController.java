@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -56,7 +58,8 @@ public class TagController {
     }
 
     @GetMapping("/get_tag_info")
-    public Result getTagInfo(@Validated @RequestParam Long tagId, @CurrentUser Long userId) {
+    public Result getTagInfo(@Validated @RequestParam @NotNull(message = "tagId cannot be null")
+                                 @Min(value = 1, message = "tagId must be greater than 0") Long tagId, @CurrentUser Long userId) {
         tagManageService.verifyUserAdmission(userId, tagId);
         List<TagGroupVO> tagGroupVOS = tagManageService.getGroupBindTagList(tagId);
         return ResultResp.success(tagGroupVOS);

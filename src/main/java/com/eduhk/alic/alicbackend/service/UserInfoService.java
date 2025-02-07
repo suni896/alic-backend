@@ -7,6 +7,7 @@ import com.eduhk.alic.alicbackend.model.entity.PasswordEntity;
 import com.eduhk.alic.alicbackend.model.entity.UserInfoEntity;
 import com.eduhk.alic.alicbackend.model.vo.ResetVO;
 import com.eduhk.alic.alicbackend.model.vo.SmtpVO;
+import com.eduhk.alic.alicbackend.model.vo.UserInfoVO;
 import com.eduhk.alic.alicbackend.utils.AvatarUtils;
 import com.eduhk.alic.alicbackend.utils.Md5Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +31,11 @@ public class UserInfoService {
     private UserInfoMapper userInfoMapper;
 
     public UserInfoEntity getActiveUserInfoByEmail(String email) {
-        UserInfoEntity userInfoEntity = userInfoMapper.findUserByEmailAndCondition(email, 1);
-        return userInfoEntity;
+        return userInfoMapper.findUserByEmailAndCondition(email, 1);
     }
 
     public UserInfoEntity getUnactiveUserInfoByEmail(String email) {
-        UserInfoEntity userInfoEntity = userInfoMapper.findUserByEmailAndCondition(email, 0);
-        return userInfoEntity;
+        return userInfoMapper.findUserByEmailAndCondition(email, 0);
     }
 
     public void saveUserInfo(SmtpVO smtpVO) {
@@ -85,5 +84,19 @@ public class UserInfoService {
         // 更新密码
         userInfoMapper.updatePassword(md5Pwd, salt, resetVO.getUserEmail());
     }
+
+    public UserInfoVO getUserInfo(Long userId) {
+        UserInfoVO userInfoVO = new UserInfoVO();
+        UserInfoEntity userInfoEntity = userInfoMapper.findUserById(userId);
+
+        userInfoVO.setUserEmail(userInfoEntity.getUserEmail());
+        userInfoVO.setUserName(userInfoEntity.getUserName());
+        userInfoVO.setUserId(userInfoEntity.getUserId());
+
+        String userPortrait = AvatarUtils.transferToBase64(userInfoEntity.getUserPortrait());
+        userInfoVO.setUserPortrait(userPortrait);
+        return userInfoVO;
+    }
+
 
 }

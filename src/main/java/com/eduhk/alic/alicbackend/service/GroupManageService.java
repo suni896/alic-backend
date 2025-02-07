@@ -1,15 +1,19 @@
 package com.eduhk.alic.alicbackend.service;
 
 import com.eduhk.alic.alicbackend.common.constant.GroupMemberType;
+import com.eduhk.alic.alicbackend.common.constant.ResultCode;
+import com.eduhk.alic.alicbackend.common.exception.BaseException;
 import com.eduhk.alic.alicbackend.dao.ChatGroupBotMapper;
 import com.eduhk.alic.alicbackend.dao.GroupInfoMapper;
+import com.eduhk.alic.alicbackend.dao.UserInfoMapper;
 import com.eduhk.alic.alicbackend.model.entity.ChatBotInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.GroupInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.PasswordEntity;
+import com.eduhk.alic.alicbackend.model.entity.UserInfoEntity;
 import com.eduhk.alic.alicbackend.model.vo.*;
+import com.eduhk.alic.alicbackend.utils.AvatarUtils;
 import com.eduhk.alic.alicbackend.utils.Md5Utils;
 import org.springframework.stereotype.Service;
-
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,15 +28,16 @@ import java.util.stream.Collectors;
 public class GroupManageService {
     @Resource
     private GroupInfoMapper groupInfoMapper;
-
     @Resource
     private ChatGroupBotMapper chatGroupBotMapper;
+    @Resource
+    private UserInfoMapper userInfoMapper;
 
     public long createGroup(GroupInfoVO groupInfoVO, Long userId) {
         GroupInfoEntity groupInfoEntity = new GroupInfoEntity();
         if (groupInfoVO.getGroupType() == 0) {
             if (groupInfoVO.getPassword() == null) {
-                return -1;
+                throw new BaseException(ResultCode.PARAMS_IS_INVALID);
             } else {
                 PasswordEntity passwordEntity = Md5Utils.addSalt(groupInfoVO.getPassword());
                 groupInfoEntity.setPassword(passwordEntity.getPassword());
@@ -59,7 +64,7 @@ public class GroupManageService {
                     entity.setBotPrompt(vo.getBotPrompt());
                     entity.setBotContext(vo.getBotContext());
                     entity.setAccessType(vo.getAccessType());
-                    entity.setGroupId((long) groupId);
+                    entity.setGroupId(groupId);
                     return entity;
                 })
                 .collect(Collectors.toList());
@@ -89,17 +94,18 @@ public class GroupManageService {
         return chatBotInvokeVOS;
     }
 
-    public GroupDemonVO getGroupInfo(Long groupId, Long userId) {
+    public GroupDemonVO getGroupInfo(Long groupId, GroupMemberType type) {
 
         GroupInfoEntity groupInfoEntity = groupInfoMapper.selectById(groupId);
         GroupDemonVO groupDemonVO = new GroupDemonVO();
-
+        groupDemonVO.setGroupId(groupInfoEntity.getGroupId());
         groupDemonVO.setGroupName(groupInfoEntity.getGroupName());
         groupDemonVO.setGroupDescription(groupInfoEntity.getGroupDescription());
         groupDemonVO.setPortrait(groupInfoEntity.getGroupPortrait());
         groupDemonVO.setGroupType(groupInfoEntity.getGroupType());
+        groupDemonVO.setPassword(groupInfoEntity.getPassword());
 
-        if (!Objects.equals(groupInfoEntity.getGroupAdmin(), userId)) {
+        if (type == GroupMemberType.MEMBER) {
             return groupDemonVO;
         }
 
@@ -117,5 +123,82 @@ public class GroupManageService {
         ).collect(Collectors.toList());
         groupDemonVO.setChatBots(chatBotDemonVOList);
         return groupDemonVO;
+    }
+
+    public void modifyGroupInfo(GroupModifyInfoVO groupModifyInfoVO, Long userId) {
+        GroupInfoEntity groupInfoEntity = groupInfoMapper.selectById(groupModifyInfoVO.getGroupId());
+        //group是否存在
+        if (groupInfoEntity == null) {
+            throw new BaseException(ResultCode.GROUP_NOT_EXIST);
+        }
+        //group信息只有description和password可以修改
+        //group信息在展示的时候，password返回给前端加salt之后的值，在这里判断的时候如果password没修改则与数据库中salt之后的值一致，否则就是被改过了。
+        if (!Objects.equals(groupModifyInfoVO.getGroupDescription(), groupInfoEntity.getGroupDescription()) ||
+                !Objects.equals(groupModifyInfoVO.getPassword(), groupInfoEntity.getPassword())) {
+            GroupInfoEntity newGroupInfoEntity = new GroupInfoEntity();
+            newGroupInfoEntity.setGroupDescription(groupModifyInfoVO.getGroupDescription());
+
+            PasswordEntity passwordEntity = Md5Utils.addSalt(groupModifyInfoVO.getPassword(), groupInfoEntity.getSalt());
+            newGroupInfoEntity.setPassword(passwordEntity.getPassword());
+            groupInfoMapper.update(newGroupInfoEntity);
+        }
+
+        List<Long> oldBotLdList = chatGroupBotMapper.selectBotLdByGroupId(groupModifyInfoVO.getGroupId());
+        List<Long> modifyBotLdList = groupModifyInfoVO.getModifyChatBotVOS().stream().map(ChatBotDemonVO::getBotId).toList();
+        // 找出相同元素,update
+        //todo update
+        for (ChatBotDemonVO chatBotModifyVO : groupModifyInfoVO.getModifyChatBotVOS()) {
+            ChatBotInfoEntity chatBotInfoEntity = chatGroupBotMapper.selectById(chatBotModifyVO.getBotId());
+            if (Objects.equals(chatBotInfoEntity.getBotContext(), chatBotModifyVO.getBotContext()) &&
+            Objects.equals(chatBotInfoEntity.getAccessType(), chatBotModifyVO.getAccessType()) &&
+            Objects.equals(chatBotInfoEntity.getBotPrompt(), chatBotModifyVO.getBotPrompt())) {
+
+            }else {
+                //TODO 调用azure openai修改assistant
+                ChatBotInfoEntity modifyChatBotInfoEntity = new ChatBotInfoEntity();
+                modifyChatBotInfoEntity.setBotId(chatBotModifyVO.getBotId());
+                modifyChatBotInfoEntity.setAccessType(chatBotModifyVO.getAccessType());
+                modifyChatBotInfoEntity.setBotContext(chatBotModifyVO.getBotContext());
+                modifyChatBotInfoEntity.setBotPrompt(chatBotModifyVO.getBotPrompt());
+                chatGroupBotMapper.update(modifyChatBotInfoEntity);
+            }
+        }
+
+        //找出删除的bot,delete
+        List<Long> deleteBotList = oldBotLdList.stream()
+                .filter(e -> !modifyBotLdList.contains(e))
+                .toList();
+        chatGroupBotMapper.batchDeleteByIds(deleteBotList);
+
+        //新增的bot,insert
+        List<ChatBotVO> newChatBotInfoVOS = groupModifyInfoVO.getAddChatBotVOList();
+        List<ChatBotInfoEntity> newChatBotInfoEntities = newChatBotInfoVOS.stream()
+                .map(vo -> {
+                    //TODO 调用azure openai创建assistant
+                    ChatBotInfoEntity entity = new ChatBotInfoEntity();
+                    entity.setBotName(vo.getBotName());
+                    entity.setBotPrompt(vo.getBotPrompt());
+                    entity.setBotContext(vo.getBotContext());
+                    entity.setAccessType(vo.getAccessType());
+                    entity.setGroupId(groupModifyInfoVO.getGroupId());
+                    return entity;
+                }).toList();
+        chatGroupBotMapper.insertBatch(newChatBotInfoEntities);
+
+    }
+
+    public List<UserInfoVO> getMemberList(Long groupId) {
+        List<UserInfoEntity> userInfoEntities = userInfoMapper.getUsersByGroupId(groupId);
+        List<UserInfoVO> userInfoVOS = userInfoEntities.stream().map(
+                entity ->{
+                    UserInfoVO userInfoVO = new UserInfoVO();
+                    userInfoVO.setUserId(entity.getUserId());
+                    userInfoVO.setUserName(entity.getUserName());
+                    String userPortrait = AvatarUtils.transferToBase64(entity.getUserPortrait());
+                    userInfoVO.setUserPortrait(userPortrait);
+                    return userInfoVO;
+                }
+        ).toList();
+        return userInfoVOS;
     }
 }

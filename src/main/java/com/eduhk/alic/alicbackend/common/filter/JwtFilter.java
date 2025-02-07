@@ -52,6 +52,12 @@ public class JwtFilter implements Filter {
         boolean validate = JwtUtils.validate(jwtToken);
         if (!validate) {
             log.info("token 验证失败，直接返回");
+            // 设置 HTTP 响应状态码，表示未授权
+            httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+            // 直接返回响应，防止继续执行
+            httpServletResponse.getWriter().write("Unauthorized access");
+            httpServletResponse.getWriter().flush();
             return;
         }
         String userId = JwtUtils.parseTokenUserId(jwtToken).toString();

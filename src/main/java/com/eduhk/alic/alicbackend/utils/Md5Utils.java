@@ -19,4 +19,14 @@ public class Md5Utils {
         passwordEntity.setPassword(md5Pwd);
         return passwordEntity;
     }
+
+    public static PasswordEntity addSalt(String password, String salt) {
+
+        // 密码加盐后md5加密
+        String md5Pwd = SecureUtil.md5(password+salt);
+        PasswordEntity passwordEntity = new PasswordEntity();
+        passwordEntity.setSalt(salt);
+        passwordEntity.setPassword(md5Pwd);
+        return passwordEntity;
+    }
 }

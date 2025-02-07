@@ -23,8 +23,8 @@ public interface GroupInfoMapper extends BaseMapper<GroupInfoEntity> {
     @Select("SELECT * FROM chat_group")
     List<GroupInfoEntity> selectAll();
 
-    @Update("UPDATE chat_group SET group_name = #{groupName}, group_description = #{groupDescription}, group_portrait = #{groupPortrait}, " +
-            "group_type = #{groupType}, update_time = #{updateTime}, group_admin = #{groupAdmin}, password = #{password} " +
+    @Update("UPDATE chat_group SET group_description = #{groupDescription}, " +
+            "update_time = #{updateTime}, password = #{password} " +
             "WHERE group_id = #{groupId}")
     int update(GroupInfoEntity chatGroup);
 

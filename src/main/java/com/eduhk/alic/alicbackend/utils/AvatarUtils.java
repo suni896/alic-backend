@@ -6,6 +6,10 @@ import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Base64;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -163,6 +167,19 @@ public class AvatarUtils {
 
         g2.dispose();
         return output;
+    }
+
+    public static String transferToBase64(byte[] userPortrait){
+        ByteArrayInputStream bais = new ByteArrayInputStream(userPortrait);
+        BufferedImage image = null;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try{
+            image =  ImageIO.read(bais);
+            ImageIO.write(image, "png", baos);
+        }catch (IOException ignored){
+            //TODO
+        }
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 
 }

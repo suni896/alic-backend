@@ -1,5 +1,6 @@
 package com.eduhk.alic.alicbackend.dao;
 
+import com.eduhk.alic.alicbackend.model.entity.GroupInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.UserInfoEntity;
 import org.apache.ibatis.annotations.*;
 
@@ -43,4 +44,38 @@ public interface UserInfoMapper extends BaseMapper<UserInfoEntity> {
 
     @Update("UPDATE user_info SET user_portrait = #{userPortrait} WHERE user_id = #{userId}")
     void updatePortrait(@Param("userId") Long userId, @Param("userPortrait") byte[] userPortrait);
+
+    @Select("""
+        SELECT cg.group_id, cg.group_name, cg.group_description, cg.group_portrait,
+               cg.group_type, cg.create_time, cg.delete_time, cg.update_time, cg.group_admin
+        FROM chat_group cg
+        JOIN chat_tag_group_relation ctr ON cg.group_id = ctr.group_id
+        WHERE ctr.tag_id = #{tagId}
+    """)
+    @Results({
+            @Result(column = "group_id", property = "groupId"),
+            @Result(column = "group_name", property = "groupName"),
+            @Result(column = "group_description", property = "groupDescription"),
+            @Result(column = "group_portrait", property = "groupPortrait"),
+            @Result(column = "group_type", property = "groupType"),
+            @Result(column = "create_time", property = "createTime"),
+            @Result(column = "delete_time", property = "deleteTime"),
+            @Result(column = "update_time", property = "updateTime"),
+            @Result(column = "group_admin", property = "groupAdmin")
+    })
+    List<GroupInfoEntity> getGroupsByTagId(@Param("tagId") Long tagId);
+
+    @Select("""
+        SELECT 
+        FROM user_info ui 
+        JOIN chat_group_user_info cgui ON ui.user_id = cgui.user_id 
+        WHERE cgui.group_id = #{groupId} and ui.chat_condition < 100
+    """)
+    @Results({
+            @Result(column = "user_id", property = "userId"),
+            @Result(column = "user_email", property = "userEmail"),
+            @Result(column = "user_portrait", property = "userPortrait"),
+            @Result(column = "user_name", property = "userName")
+    })
+    List<UserInfoEntity> getUsersByGroupId(@Param("groupId") Long groupId);
 }

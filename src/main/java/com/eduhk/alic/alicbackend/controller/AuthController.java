@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private static String verfiCodeCachePrefix = "VERFI_CODE_";
-    private static String verifiTokenCachePrefix = "VERIFI_TOKEN_";
+    private static final String verfiCodeCachePrefix = "VERFI_CODE_";
+    private static final String verifiTokenCachePrefix = "VERIFI_TOKEN_";
 
     @Resource
     UserInfoService userInfoService;

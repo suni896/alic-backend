@@ -12,9 +12,11 @@ import java.util.List;
  */
 @Data
 public class GroupDemonVO {
+    private Long groupId;
     private String groupName;       // Group name
     private String groupDescription; // Group description
     private Integer groupType;      // Group type (0: private, 1: public)
+    private String password;        // Password for private group
     private String portrait;        // Password for private group
     private List<ChatBotDemonVO> chatBots;
 

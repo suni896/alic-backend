@@ -4,6 +4,7 @@ import com.eduhk.alic.alicbackend.model.vo.CurrentUser;
 import com.eduhk.alic.alicbackend.model.vo.Result;
 import com.eduhk.alic.alicbackend.model.vo.ResultResp;
 import com.eduhk.alic.alicbackend.service.GroupUserService;
+import com.eduhk.alic.alicbackend.service.UserInfoService;
 import com.eduhk.alic.alicbackend.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +23,7 @@ import javax.annotation.Resource;
 @RequestMapping("/v1/user")
 public class UserController {
     @Resource
-    private GroupUserService groupUserService;
+    private UserInfoService userInfoService;
 
     //登出
     @PostMapping("/logout")
@@ -35,6 +36,6 @@ public class UserController {
     @GetMapping("/get_user_info")
     public Result getUserInfo(@CurrentUser Long userId) {
         log.info("getUserInfo:{}", userId);
-        return ResultResp.success(groupUserService.getUserInfo(userId));
+        return ResultResp.success(userInfoService.getUserInfo(userId));
     }
 }

@@ -1,11 +1,15 @@
 package com.eduhk.alic.alicbackend.common.exception;
 
+import cn.hutool.http.HttpResponse;
 import com.eduhk.alic.alicbackend.common.constant.ResultCode;
 import com.eduhk.alic.alicbackend.model.vo.Result;
 import com.eduhk.alic.alicbackend.model.vo.ResultResp;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.servlet.http.HttpServletRequest;
@@ -63,5 +67,10 @@ public class GlobalExceptionHandler {
         return ResultResp.failure(e.getErrorCode());
     }
 
+    @ResponseBody
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Result exceptionHandler(MethodArgumentNotValidException e) {
+        return ResultResp.failure(ResultCode.PARAMS_IS_INVALID, e.getBindingResult().getFieldError().getDefaultMessage());
+    }
 
 }
