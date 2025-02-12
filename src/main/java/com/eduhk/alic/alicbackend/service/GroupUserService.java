@@ -12,16 +12,10 @@ import com.eduhk.alic.alicbackend.model.entity.GroupInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.UserInfoEntity;
 import com.eduhk.alic.alicbackend.model.vo.GroupJoinVO;
 import com.eduhk.alic.alicbackend.model.vo.GroupRemoveVO;
-import com.eduhk.alic.alicbackend.model.vo.UserInfoVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -48,10 +42,24 @@ public class GroupUserService {
     public List<ChatGroupUserEntity> getUsersByGroupId(Long groupId) {
         return chatGroupUserMapper.selectByGroupId(groupId);
     }
-
-    public Boolean verifyUserExistInGroup(Long groupId, Long addUserId) {
-        ChatGroupUserEntity chatGroupUserEntity = chatGroupUserMapper.selectByUserIdAndGroupId(addUserId, groupId);
+//    public void verifyGroupExist(Long groupId) {
+//        // 验证群组是否存在
+//        GroupInfoEntity groupInfoEntity = groupInfoMapper.selectById(groupId);
+//        if (groupInfoEntity == null) {
+//            throw new BaseException(ResultCode.GROUP_NOT_EXIST);
+//        }
+//    }
+    public Boolean verifyUserExistInGroup(Long groupId, Long userId) {
+        ChatGroupUserEntity chatGroupUserEntity = chatGroupUserMapper.selectByUserIdAndGroupId(groupId, userId);
         return chatGroupUserEntity != null;
+    }
+
+    private void verifyUserExist(Long userId) {
+        // 验证用户是否存在
+        UserInfoEntity userInfoEntity = userInfoMapper.selectById(userId);
+        if (userInfoEntity == null) {
+            throw new BaseException(ResultCode.USER_NOT_EXIST);
+        }
     }
     public void verifyGroupAuth(GroupJoinVO groupJoinVO, Long operatorId) {
         // 验证群组是否存在
@@ -59,6 +67,8 @@ public class GroupUserService {
         if (groupInfoEntity == null) {
             throw new BaseException(ResultCode.GROUP_NOT_EXIST);
         }
+        // 验证用户是否存在
+        verifyUserExist(groupJoinVO.getJoinMemberID());
         //验证是谁发起的
         if (!Objects.equals(operatorId, groupJoinVO.getJoinMemberID()) && !Objects.equals(operatorId, groupInfoEntity.getGroupAdmin())) {
             throw new BaseException(ResultCode.NO_AUTH);
@@ -70,6 +80,8 @@ public class GroupUserService {
             // 验证密码
             String salt = groupInfoEntity.getSalt();
             String md5Pwd = SecureUtil.md5(groupJoinVO.getPassword()+salt);
+            System.out.println("md5Pwd: "+md5Pwd);
+            System.out.println("md5Pwd: "+groupInfoEntity.getPassword());
             // 校验密码
             if (!groupInfoEntity.getPassword().equals(md5Pwd)){
                 throw new BaseException(ResultCode.PASSWORD_ERROR);
@@ -83,10 +95,11 @@ public class GroupUserService {
         if (groupInfoEntity == null) {
             throw new BaseException(ResultCode.GROUP_NOT_EXIST);
         }
-        //验证是谁发起的
+        // 验证用户是否存在
+        verifyUserExist(groupRemoveVO.getRemoveMemberId());
+        //操作人是退群的人，或者操作人是admin
         if (!Objects.equals(operatorId, groupRemoveVO.getRemoveMemberId()) && !Objects.equals(operatorId, groupInfoEntity.getGroupAdmin())) {
             throw new BaseException(ResultCode.NO_AUTH);
-
         }
     }
 
@@ -96,7 +109,7 @@ public class GroupUserService {
         if (groupInfoEntity == null) {
             throw new BaseException(ResultCode.GROUP_NOT_EXIST);
         }
-        if (!Objects.equals(userId, groupInfoEntity.getGroupAdmin())) {
+        if (Objects.equals(userId, groupInfoEntity.getGroupAdmin())) {
             return GroupMemberType.ADMIN;
         } else {
             return GroupMemberType.MEMBER;

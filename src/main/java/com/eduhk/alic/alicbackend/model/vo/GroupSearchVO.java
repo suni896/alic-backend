@@ -5,12 +5,12 @@ import lombok.Data;
 
 /**
  * @author FuSu
- * @date 2025/2/4 11:34
+ * @date 2025/2/9 19:28
  */
 @Data
-public class GroupListVO {
+public class GroupSearchVO{
 
+    private String keyword;
     private GroupDemonTypeEnum groupDemonTypeEnum;
-
-    private String searchKey;
+    private PageRequestVO pageRequestVO;
 }

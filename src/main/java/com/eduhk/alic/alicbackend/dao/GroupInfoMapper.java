@@ -1,7 +1,9 @@
 package com.eduhk.alic.alicbackend.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.eduhk.alic.alicbackend.model.entity.GroupDetailInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.GroupInfoEntity;
+import com.eduhk.alic.alicbackend.model.entity.GroupTagEntity;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -12,8 +14,8 @@ import java.util.List;
  */
 @Mapper
 public interface GroupInfoMapper extends BaseMapper<GroupInfoEntity> {
-    @Insert("INSERT INTO chat_group (group_name, group_description, group_portrait, group_type, create_time, delete_time, update_time, group_admin, password) " +
-            "VALUES (#{groupName}, #{groupDescription}, #{groupPortrait}, #{groupType}, #{createTime}, #{deleteTime}, #{updateTime}, #{groupAdmin}, #{password})")
+    @Insert("INSERT INTO chat_group (group_name, group_description, group_portrait, group_type, create_time, delete_time, update_time, group_admin, password, salt) " +
+            "VALUES (#{groupName}, #{groupDescription}, #{groupPortrait}, #{groupType}, #{createTime}, #{deleteTime}, #{updateTime}, #{groupAdmin}, #{password}, #{salt})")
     @Options(useGeneratedKeys = true, keyProperty = "groupId", keyColumn = "group_id")
     int insert(GroupInfoEntity chatGroup);
 
@@ -51,4 +53,153 @@ public interface GroupInfoMapper extends BaseMapper<GroupInfoEntity> {
     })
     List<GroupInfoEntity> getGroupsByTagId(@Param("tagId") Long tagId);
 
+//    @Select({
+//            "<script>",
+//            "SELECT group_id, group_name, group_description, group_portrait, group_type, create_time, update_time, group_admin ",
+//            "FROM chat_group ",
+//            "WHERE 1=1 ",
+//            "<if test='keyword != null and keyword != \"\"'>",
+//            "    AND (group_name LIKE CONCAT('%', #{keyword}, '%') ",
+//            "         OR group_description LIKE CONCAT('%', #{keyword}, '%')) ",
+//            "</if>",
+//            "GROUP BY group_id",
+//            "</script>"
+//    })
+//    List<GroupInfoEntity> getAllGroups(@Param("keyword") String keyword);
+    @Select({
+        "<script>",
+        "SELECT g.group_id, g.group_name, g.group_description, g.group_portrait, ",
+        "       g.group_type, g.create_time, g.update_time, g.group_admin, ",
+        "       u.user_name AS group_admin_name, ",
+        "       COUNT(cgui.user_id) AS group_member_count ",
+        "FROM chat_group g ",
+        "LEFT JOIN user_info u ON g.group_admin = u.user_id ",
+        "LEFT JOIN chat_group_user_info cgui ON g.group_id = cgui.group_id ",
+        "WHERE 1=1 ",
+        "<if test='keyword != null and keyword != \"\"'>",
+        "    AND (g.group_name LIKE CONCAT('%', #{keyword}, '%') ",
+        "         OR g.group_description LIKE CONCAT('%', #{keyword}, '%')) ",
+        "</if>",
+        "GROUP BY g.group_id, u.user_name",
+        "ORDER BY g.create_time DESC",
+        "</script>"
+    })
+    List<GroupDetailInfoEntity> getAllGroups(@Param("keyword") String keyword);
+//
+//    @Select({
+//            "<script>",
+//            "SELECT group_id, group_name, group_description, group_portrait, group_type, ",
+//            "       create_time, update_time, group_admin ",
+//            "FROM chat_group ",
+//            "WHERE 1=1 AND group_type = 1",
+//            "<if test='keyword != null and keyword != \"\"'>",
+//            "    AND (group_name LIKE CONCAT('%', #{keyword}, '%') ",
+//            "         OR group_description LIKE CONCAT('%', #{keyword}, '%')) ",
+//            "</if>",
+//            "GROUP BY group_id",
+//            "</script>"
+//    })
+//    List<GroupInfoEntity> getPublicGroups(@Param("keyword") String keyword);
+    @Select({
+        "<script>",
+        "SELECT g.group_id, g.group_name, g.group_description, g.group_portrait, ",
+        "       g.group_type, g.create_time, g.update_time, g.group_admin, ",
+        "       u.user_name AS group_admin_name, ",
+        "       COUNT(cgui.user_id) AS group_member_count ",
+        "FROM chat_group g ",
+        "LEFT JOIN user_info u ON g.group_admin = u.user_id ",
+        "LEFT JOIN chat_group_user_info cgui ON g.group_id = cgui.group_id ",
+        "WHERE 1=1 AND group_type = 1",
+        "<if test='keyword != null and keyword != \"\"'>",
+        "    AND (g.group_name LIKE CONCAT('%', #{keyword}, '%') ",
+        "         OR g.group_description LIKE CONCAT('%', #{keyword}, '%')) ",
+        "</if>",
+        "GROUP BY g.group_id, u.user_name",
+        "ORDER BY g.create_time DESC",
+        "</script>"
+    })
+    List<GroupDetailInfoEntity> getPublicGroups(@Param("keyword") String keyword);
+
+//    @Select({
+//            "<script>",
+//            "SELECT g.group_id, g.group_name, g.group_description, g.group_portrait, g.group_type, ",
+//            "       g.create_time, g.update_time, g.group_admin ",
+//            "FROM chat_group g ",
+//            "LEFT JOIN chat_group_user_info gu ON g.group_id = gu.group_id ",
+//            "WHERE 1=1 ",
+//            "<if test='userId != null'>",
+//            "    AND gu.user_id = #{userId} ",
+//            "</if>",
+//            "<if test='keyword != null and keyword != \"\"'>",
+//            "    AND (g.group_name LIKE CONCAT('%', #{keyword}, '%') ",
+//            "         OR g.group_description LIKE CONCAT('%', #{keyword}, '%')) ",
+//            "</if>",
+//            "GROUP BY g.group_id",
+//            "</script>"
+//    })
+//    List<GroupInfoEntity> getJoinGroups(@Param("userId") Long userId,
+//                            @Param("keyword") String keyword);
+
+    @Select({
+            "<script>",
+            "SELECT g.group_id, g.group_name, g.group_description, g.group_portrait, ",
+            "       g.group_type, g.create_time, g.update_time, g.group_admin, ",
+            "       u.user_name AS group_admin_name, ",
+            "       (SELECT COUNT(*) FROM chat_group_user_info WHERE group_id = g.group_id) AS group_member_count ",
+            "FROM chat_group g ",
+            "LEFT JOIN user_info u ON g.group_admin = u.user_id ",
+            "LEFT JOIN chat_group_user_info cgui ON g.group_id = cgui.group_id ",
+            "WHERE 1=1",
+            "<if test='userId != null'>",
+            "    AND cgui.user_id = #{userId} ",
+            "</if>",
+            "<if test='keyword != null and keyword != \"\"'>",
+            "    AND (g.group_name LIKE CONCAT('%', #{keyword}, '%') ",
+            "         OR g.group_description LIKE CONCAT('%', #{keyword}, '%')) ",
+            "</if>",
+            "GROUP BY g.group_id, u.user_name",
+            "ORDER BY g.create_time DESC",
+            "</script>"
+    })
+    List<GroupDetailInfoEntity> getJoinGroups(@Param("userId") Long userId,
+                                              @Param("keyword") String keyword);
+
+
+    @Select({
+            "<script>",
+            "SELECT g.group_id, g.group_name",
+            "FROM chat_group g ",
+            "LEFT JOIN chat_group_user_info cgui ON g.group_id = cgui.group_id ",
+            "WHERE 1=1",
+            "<if test='userId != null'>",
+            "    AND cgui.user_id = #{userId} ",
+            "</if>",
+            "<if test='keyword != null and keyword != \"\"'>",
+            "    AND (g.group_name LIKE CONCAT('%', #{keyword}, '%') ",
+            "         OR g.group_description LIKE CONCAT('%', #{keyword}, '%')) ",
+            "</if>",
+            "GROUP BY g.group_id",
+            "ORDER BY g.create_time DESC",
+            "</script>"
+    })
+    List<GroupTagEntity> getJoinGroupsForTag(@Param("userId") Long userId,
+                                              @Param("keyword") String keyword);
+    @Select({
+            "<script>",
+            "SELECT g.group_id, g.group_name",
+            "FROM chat_group g ",
+            "LEFT JOIN chat_tag_group_relation ctgr ON g.group_id = ctgr.group_id ",
+            "WHERE 1=1",
+            "<if test='tagId != null'>",
+            "    AND ctgr.tag_id = #{tagId} ",
+            "</if>",
+            "<if test='keyword != null and keyword != \"\"'>",
+            "    AND (g.group_name LIKE CONCAT('%', #{keyword}, '%') ",
+            "</if>",
+            "GROUP BY g.group_id",
+            "ORDER BY g.create_time DESC",
+            "</script>"
+    })
+    List<GroupTagEntity> getGroupsBindedTag(@Param("tagId") Long tagId,
+                                            @Param("keyword") String keyword);
 }

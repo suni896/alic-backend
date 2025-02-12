@@ -66,10 +66,10 @@ public interface UserInfoMapper extends BaseMapper<UserInfoEntity> {
     List<GroupInfoEntity> getGroupsByTagId(@Param("tagId") Long tagId);
 
     @Select("""
-        SELECT 
+        SELECT ui.user_id, ui.user_email, ui.user_portrait, ui.user_name
         FROM user_info ui 
         JOIN chat_group_user_info cgui ON ui.user_id = cgui.user_id 
-        WHERE cgui.group_id = #{groupId} and ui.chat_condition < 100
+        WHERE cgui.group_id = #{groupId} and ui.user_condition < 100
     """)
     @Results({
             @Result(column = "user_id", property = "userId"),
@@ -78,4 +78,13 @@ public interface UserInfoMapper extends BaseMapper<UserInfoEntity> {
             @Result(column = "user_name", property = "userName")
     })
     List<UserInfoEntity> getUsersByGroupId(@Param("groupId") Long groupId);
+
+
+    @Select("""
+        SELECT COUNT(*)
+        FROM user_info ui 
+        JOIN chat_group_user_info cgui ON ui.user_id = cgui.user_id 
+        WHERE cgui.group_id = #{groupId} and ui.user_condition < 100
+    """)
+    Long getUserCountByGroupId(@Param("groupId") Long groupId);
 }

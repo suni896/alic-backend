@@ -36,7 +36,7 @@ public interface ChatGroupUserMapper extends BaseMapper<ChatGroupUserEntity> {
 
     //查询user是否在组里
     @Select("SELECT * FROM chat_group_user_info WHERE user_id = #{userId} AND group_id = #{groupId}")
-    ChatGroupUserEntity selectByUserIdAndGroupId(@Param("userId") Long userId, @Param("groupId") Long groupId);
+    ChatGroupUserEntity selectByUserIdAndGroupId(@Param("groupId") Long groupId, @Param("userId") Long userId);
 
     // 更新用户所在的群组信息
     @Update("UPDATE chat_group_user_info SET group_id = #{groupId}, update_time = NOW() WHERE id = #{id}")

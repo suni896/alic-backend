@@ -29,6 +29,7 @@ public enum ResultCode {
     USER_NOT_IN_GROUP(1008,"user not in group"),
     USER_ALREADY_IN_GROUP(1009,"user already in group"),
     GROUP_NOT_PRIVATE(1010,"group is not private"),
+    GROUP_MEMBER_LIMIT(1011,"group member limit exceeded"),
 
     /*用户错误2001-2999*/
     UNREGISTERED_ACCOUNT(2001, "the account is unregistered, please register first"),

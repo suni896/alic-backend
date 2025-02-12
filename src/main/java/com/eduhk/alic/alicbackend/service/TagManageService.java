@@ -97,7 +97,7 @@ public class TagManageService {
             TagGroupVO tagGroupVO = new TagGroupVO();
             tagGroupVO.setGroupName(groupInfoEntity.getGroupName());
             tagGroupVO.setGroupId(Long.valueOf(groupInfoEntity.getGroupId()));
-            tagGroupVO.setGroupPortrait(groupInfoEntity.getGroupPortrait());
+//            tagGroupVO.setGroupPortrait(groupInfoEntity.getGroupPortrait());
             tagGroupVO.setGroupAdmin(groupInfoEntity.getGroupAdmin());
             tagGroupVO.setGroupDescription(groupInfoEntity.getGroupDescription());
             return tagGroupVO;

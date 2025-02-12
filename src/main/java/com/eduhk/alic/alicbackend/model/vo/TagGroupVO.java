@@ -11,7 +11,7 @@ public class TagGroupVO {
     private Long groupId;           // Group ID
     private String groupName;       // Group name
     private String groupDescription; // Group description
-    private String groupPortrait;   // Group portrait
+//    private String groupPortrait;   // Group portrait
     private Long groupAdmin;
 
 }

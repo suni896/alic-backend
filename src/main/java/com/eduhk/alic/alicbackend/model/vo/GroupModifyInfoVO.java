@@ -20,8 +20,6 @@ public class GroupModifyInfoVO {
 
     @Length(max = 200, message = "groupDescription length error")
     private String groupDescription; // Group description
-
-    @Pattern(regexp = "^[A-Za-z0-9]{1,20}$", message = "password pattern error")
     private String password;        // Password for private group
     private List<ChatBotDemonVO> modifyChatBotVOS; //原来就有的bot
     private List<ChatBotVO> addChatBotVOList; //新增的bot

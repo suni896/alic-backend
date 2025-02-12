@@ -35,7 +35,7 @@ public interface ChatGroupBotMapper extends BaseMapper<ChatBotInfoEntity> {
     @Select("SELECT * FROM chat_group_bot WHERE group_id = #{groupId}")
     List<ChatBotInfoEntity> selectByGroupId(@Param("groupId") Long groupId);
 
-    @Select("SELECT botId FROM chat_group_bot WHERE group_id = #{groupId}")
+    @Select("SELECT bot_id FROM chat_group_bot WHERE group_id = #{groupId}")
     List<Long> selectBotLdByGroupId(@Param("groupId") Long groupId);
 
     @Select("SELECT * FROM chat_group_bot WHERE group_id = #{groupId} and access_type = 1")
@@ -51,12 +51,17 @@ public interface ChatGroupBotMapper extends BaseMapper<ChatBotInfoEntity> {
     int deleteById(@Param("botId") Long botId);
 
     @Delete("<script>" +
-            "DELETE FROM chat_group_bot WHERE bot_id IN " +
-            "<foreach item='bot' index='index' collection='botIds' open='(' separator=',' close=')'>" +
-            "#{bot}" +
-            "</foreach>" +
+            "DELETE FROM chat_group_bot " +
+            "<where>" +
+            "    <if test='botIds != null and botIds.size() > 0'>" +
+            "        bot_id IN " +
+            "        <foreach item='bot' collection='botIds' open='(' separator=',' close=')'>" +
+            "            #{bot}" +
+            "        </foreach>" +
+            "    </if>" +
+            "</where>" +
             "</script>")
-    void batchDeleteByIds(List<Long> botIds);
+    void batchDeleteByIds(@Param("botIds") List<Long> botIds);
 
     @Update("<script>" +
             "<foreach item='bot' index='index' collection='bots' open='' separator=';' close=''>" +

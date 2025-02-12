@@ -1,6 +1,7 @@
 package com.eduhk.alic.alicbackend.controller;
 
 import com.eduhk.alic.alicbackend.model.vo.*;
+import com.eduhk.alic.alicbackend.service.GroupSearchService;
 import com.eduhk.alic.alicbackend.service.TagManageService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,9 @@ import java.util.List;
 public class TagController {
     @Resource
     TagManageService tagManageService;
+
+    @Resource
+    GroupSearchService groupSearchService;
 
     @PostMapping("/add_tag")
     public Result addTag(@Validated @RequestBody TagNameVO TagName, @CurrentUser Long userId) {
@@ -63,5 +67,11 @@ public class TagController {
         tagManageService.verifyUserAdmission(userId, tagId);
         List<TagGroupVO> tagGroupVOS = tagManageService.getGroupBindTagList(tagId);
         return ResultResp.success(tagGroupVOS);
+    }
+
+    @PostMapping("/get_group_list_for_tag")
+    public Result getGroupList(@Validated @RequestBody GroupTagSearchVO groupTagSearchVO, @CurrentUser Long userId) {
+        tagManageService.verifyUserAdmission(userId, groupTagSearchVO.getTagId());
+        return ResultResp.success(groupSearchService.searchGroupForTag(userId, groupTagSearchVO.getTagId(),groupTagSearchVO.getKeyword()));
     }
 }

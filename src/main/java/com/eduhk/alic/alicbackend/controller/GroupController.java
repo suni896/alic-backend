@@ -4,9 +4,9 @@ import com.eduhk.alic.alicbackend.common.constant.GroupMemberType;
 import com.eduhk.alic.alicbackend.common.constant.ResultCode;
 import com.eduhk.alic.alicbackend.model.vo.*;
 import com.eduhk.alic.alicbackend.service.GroupManageService;
+import com.eduhk.alic.alicbackend.service.GroupSearchService;
 import com.eduhk.alic.alicbackend.service.GroupUserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
@@ -25,23 +25,33 @@ public class GroupController {
 
     @Resource
     GroupManageService groupManageService;
-    @Autowired
-    private GroupUserService groupUserService;
+    @Resource
+    GroupUserService groupUserService;
+    @Resource
+    GroupSearchService groupSearchService;
+
+    private static final Integer GROUP_MEMBER_LIMIT = 100;
 
     //创建群组
     @PostMapping("/create_new_group")
     public Result createGroup(@Validated @RequestBody GroupInfoVO groupInfoVO, @CurrentUser Long userId) {
-        long newGroupId = groupManageService.createGroup(groupInfoVO, userId);
+        Long newGroupId = groupManageService.createGroup(groupInfoVO, userId);
+        groupUserService.addUserToGroup(newGroupId, userId);
         groupManageService.createGroupBot(groupInfoVO.getChatBotVOList(), newGroupId);
         return ResultResp.success(newGroupId);
     }
 
     @PostMapping("/edit_group_info")
     public Result editGroup(@Validated @RequestBody GroupModifyInfoVO groupModifyInfoVO, @CurrentUser Long userId) {
+        Boolean isExist = groupUserService.verifyUserExistInGroup(groupModifyInfoVO.getGroupId(), userId);
+        if (!isExist) {
+            return ResultResp.failure(ResultCode.USER_NOT_IN_GROUP);
+        }
         GroupMemberType type = groupUserService.getGroupMemberType(groupModifyInfoVO.getGroupId(), userId);
         if (type == GroupMemberType.MEMBER) {
             return ResultResp.failure(ResultCode.NO_AUTH);
         }
+        groupManageService.modifyGroupInfo(groupModifyInfoVO);
         return ResultResp.success();
     }
     //获取群组信息
@@ -49,6 +59,10 @@ public class GroupController {
     public Result getGroupInfo(@RequestParam("groupId") @NotNull(message = "groupId cannot be null")
                                    @Min(value = 1, message = "groupId must be greater than 0") Long groupId,
                                @CurrentUser Long userId) {
+        Boolean isExist = groupUserService.verifyUserExistInGroup(groupId, userId);
+        if (!isExist) {
+            return ResultResp.failure(ResultCode.USER_NOT_IN_GROUP);
+        }
         GroupMemberType type = groupUserService.getGroupMemberType(groupId, userId);
         GroupDemonVO groupDemonVO = groupManageService.getGroupInfo(groupId, type);
         return ResultResp.success(groupDemonVO);
@@ -56,15 +70,20 @@ public class GroupController {
 
     //获取群组列表
     @PostMapping("/get_group_list")
-    public Result getGroupList(@Validated @RequestBody GroupListVO groupListVO, @CurrentUser Long userId) {
-        switch (groupListVO.getGroupDemonTypeEnum()){
-            case ALLROOM -> {}
-            case JOINEDROOM -> {}
+    public Result getGroupList(@Validated @RequestBody GroupSearchVO groupSearchVO, @CurrentUser Long userId) {
+        PageVO<GroupSearchInfoVO> groupDemonVOPageVO = new PageVO<>();
+        switch (groupSearchVO.getGroupDemonTypeEnum()){
+            case ALLROOM -> {
+                groupDemonVOPageVO = groupSearchService.searchAllGroup(groupSearchVO.getKeyword(), groupSearchVO.getPageRequestVO().getPageSize(), groupSearchVO.getPageRequestVO().getPageNum());
+            }
+            case JOINEDROOM -> {
+                groupDemonVOPageVO = groupSearchService.searchJoinGroup(userId, groupSearchVO.getKeyword(),groupSearchVO.getPageRequestVO().getPageSize(), groupSearchVO.getPageRequestVO().getPageNum());
+            }
             case PUBLICROOM -> {
-                //todo 分页
+                groupDemonVOPageVO = groupSearchService.searchPublicGroup(groupSearchVO.getKeyword(), groupSearchVO.getPageRequestVO().getPageSize(), groupSearchVO.getPageRequestVO().getPageNum());
             }
         }
-        return ResultResp.success();
+        return ResultResp.success(groupDemonVOPageVO);
     }
 
     //获取群组成员列表
@@ -107,11 +126,18 @@ public class GroupController {
     @PostMapping("/add_group_member")
     public Result addGroupMember(@Validated @RequestBody GroupJoinVO groupJoinVO,
                                  @CurrentUser Long userId) {
+        //校验人数<=100
+        Long memberCount = groupManageService.getMemberCount(groupJoinVO.getGroupId());
+        if (memberCount >= GROUP_MEMBER_LIMIT) {
+            return ResultResp.failure(ResultCode.GROUP_MEMBER_LIMIT);
+        }
+        //admin可添加member（预留逻辑）, member可添加自己
+        groupUserService.verifyGroupAuth(groupJoinVO, userId);
+        //被移除人是否在群里
         Boolean isExist = groupUserService.verifyUserExistInGroup(groupJoinVO.getGroupId(), groupJoinVO.getJoinMemberID());
         if (isExist) {
             return ResultResp.failure(ResultCode.USER_ALREADY_IN_GROUP);
         }
-        groupUserService.verifyGroupAuth(groupJoinVO, userId);
         groupUserService.addGroupMember(groupJoinVO.getGroupId(), groupJoinVO.getJoinMemberID());
         return ResultResp.success();
     }
@@ -119,11 +145,21 @@ public class GroupController {
     @PostMapping("/remove_group_member")
     public Result removeGroupMember(@Validated @RequestBody GroupRemoveVO groupRemoveVO,
                                     @CurrentUser Long userId) {
+//        groupUserService.verifyGroupExist(groupRemoveVO.getGroupId());
+
+        //admin可移除member, member可移除自己
+        groupUserService.verifyGroupAuth(groupRemoveVO, userId);
+        //被移除人是否在群里
         Boolean isExist = groupUserService.verifyUserExistInGroup(groupRemoveVO.getGroupId(), groupRemoveVO.getRemoveMemberId());
         if (!isExist) {
             return ResultResp.failure(ResultCode.USER_NOT_IN_GROUP);
         }
-        groupUserService.verifyGroupAuth(groupRemoveVO, userId);
+        //ADMIN不可退群
+        GroupMemberType removeType = groupUserService.getGroupMemberType(groupRemoveVO.getGroupId(), groupRemoveVO.getRemoveMemberId());
+        if (removeType == GroupMemberType.ADMIN) {
+            return ResultResp.failure(ResultCode.NO_AUTH);
+        }
+
         groupUserService.removeGroupMember(groupRemoveVO.getGroupId(), groupRemoveVO.getRemoveMemberId());
         return ResultResp.success();
     }

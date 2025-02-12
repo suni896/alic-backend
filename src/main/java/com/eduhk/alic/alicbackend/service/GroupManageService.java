@@ -11,7 +11,6 @@ import com.eduhk.alic.alicbackend.model.entity.GroupInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.PasswordEntity;
 import com.eduhk.alic.alicbackend.model.entity.UserInfoEntity;
 import com.eduhk.alic.alicbackend.model.vo.*;
-import com.eduhk.alic.alicbackend.utils.AvatarUtils;
 import com.eduhk.alic.alicbackend.utils.Md5Utils;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
@@ -48,7 +47,7 @@ public class GroupManageService {
         groupInfoEntity.setGroupName(groupInfoVO.getGroupName());
         groupInfoEntity.setGroupDescription(groupInfoVO.getGroupDescription());
         // TODO 头像生成
-        groupInfoEntity.setGroupPortrait("");
+//        groupInfoEntity.setGroupPortrait("");
         groupInfoEntity.setGroupAdmin(userId);
         groupInfoMapper.insert(groupInfoEntity);
         return groupInfoEntity.getGroupId();
@@ -101,7 +100,8 @@ public class GroupManageService {
         groupDemonVO.setGroupId(groupInfoEntity.getGroupId());
         groupDemonVO.setGroupName(groupInfoEntity.getGroupName());
         groupDemonVO.setGroupDescription(groupInfoEntity.getGroupDescription());
-        groupDemonVO.setPortrait(groupInfoEntity.getGroupPortrait());
+        //todo 头像
+//        groupDemonVO.setPortrait(groupInfoEntity.getGroupPortrait());
         groupDemonVO.setGroupType(groupInfoEntity.getGroupType());
         groupDemonVO.setPassword(groupInfoEntity.getPassword());
 
@@ -125,7 +125,7 @@ public class GroupManageService {
         return groupDemonVO;
     }
 
-    public void modifyGroupInfo(GroupModifyInfoVO groupModifyInfoVO, Long userId) {
+    public void modifyGroupInfo(GroupModifyInfoVO groupModifyInfoVO) {
         GroupInfoEntity groupInfoEntity = groupInfoMapper.selectById(groupModifyInfoVO.getGroupId());
         //group是否存在
         if (groupInfoEntity == null) {
@@ -135,18 +135,24 @@ public class GroupManageService {
         //group信息在展示的时候，password返回给前端加salt之后的值，在这里判断的时候如果password没修改则与数据库中salt之后的值一致，否则就是被改过了。
         if (!Objects.equals(groupModifyInfoVO.getGroupDescription(), groupInfoEntity.getGroupDescription()) ||
                 !Objects.equals(groupModifyInfoVO.getPassword(), groupInfoEntity.getPassword())) {
-            GroupInfoEntity newGroupInfoEntity = new GroupInfoEntity();
-            newGroupInfoEntity.setGroupDescription(groupModifyInfoVO.getGroupDescription());
 
-            PasswordEntity passwordEntity = Md5Utils.addSalt(groupModifyInfoVO.getPassword(), groupInfoEntity.getSalt());
-            newGroupInfoEntity.setPassword(passwordEntity.getPassword());
-            groupInfoMapper.update(newGroupInfoEntity);
+            // 更新群组描述
+            groupInfoEntity.setGroupDescription(groupModifyInfoVO.getGroupDescription());
+
+            // 处理密码更新
+            String newPassword = groupModifyInfoVO.getPassword();
+            if (!Objects.equals(newPassword, groupInfoEntity.getPassword())) {
+                groupInfoEntity.setPassword(Md5Utils.addSalt(newPassword, groupInfoEntity.getSalt()).getPassword());
+            }
+
+            // 更新数据库
+            groupInfoMapper.update(groupInfoEntity);
         }
 
         List<Long> oldBotLdList = chatGroupBotMapper.selectBotLdByGroupId(groupModifyInfoVO.getGroupId());
         List<Long> modifyBotLdList = groupModifyInfoVO.getModifyChatBotVOS().stream().map(ChatBotDemonVO::getBotId).toList();
+        System.out.println(modifyBotLdList.get(0));
         // 找出相同元素,update
-        //todo update
         for (ChatBotDemonVO chatBotModifyVO : groupModifyInfoVO.getModifyChatBotVOS()) {
             ChatBotInfoEntity chatBotInfoEntity = chatGroupBotMapper.selectById(chatBotModifyVO.getBotId());
             if (Objects.equals(chatBotInfoEntity.getBotContext(), chatBotModifyVO.getBotContext()) &&
@@ -168,10 +174,16 @@ public class GroupManageService {
         List<Long> deleteBotList = oldBotLdList.stream()
                 .filter(e -> !modifyBotLdList.contains(e))
                 .toList();
-        chatGroupBotMapper.batchDeleteByIds(deleteBotList);
+        if (!deleteBotList.isEmpty()) {
+            chatGroupBotMapper.batchDeleteByIds(deleteBotList);
+        }
+
 
         //新增的bot,insert
         List<ChatBotVO> newChatBotInfoVOS = groupModifyInfoVO.getAddChatBotVOList();
+        if (newChatBotInfoVOS == null || newChatBotInfoVOS.isEmpty()) {
+            return;
+        }
         List<ChatBotInfoEntity> newChatBotInfoEntities = newChatBotInfoVOS.stream()
                 .map(vo -> {
                     //TODO 调用azure openai创建assistant
@@ -185,6 +197,7 @@ public class GroupManageService {
                 }).toList();
         chatGroupBotMapper.insertBatch(newChatBotInfoEntities);
 
+
     }
 
     public List<UserInfoVO> getMemberList(Long groupId) {
@@ -194,11 +207,17 @@ public class GroupManageService {
                     UserInfoVO userInfoVO = new UserInfoVO();
                     userInfoVO.setUserId(entity.getUserId());
                     userInfoVO.setUserName(entity.getUserName());
-                    String userPortrait = AvatarUtils.transferToBase64(entity.getUserPortrait());
-                    userInfoVO.setUserPortrait(userPortrait);
+                    userInfoVO.setUserEmail(entity.getUserEmail());
+                    //todo 头像
+//                    String userPortrait = AvatarUtils.transferToBase64(entity.getUserPortrait());
+//                    userInfoVO.setUserPortrait(userPortrait);
                     return userInfoVO;
                 }
         ).toList();
         return userInfoVOS;
+    }
+
+    public Long getMemberCount(Long groupId) {
+        return userInfoMapper.getUserCountByGroupId(groupId);
     }
 }
