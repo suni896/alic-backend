@@ -26,7 +26,7 @@ public class GroupInfoVO {
     @ApiParam(value = "0: private, 1: public", example = "0")
     private Integer groupType;      // Group type (0: private, 1: public)
 
-    @Pattern(regexp = "^[A-Za-z0-9]{1,20}$", message = "password pattern error")
+    @Pattern(regexp = "^[A-Za-z0-9!@#$%^&*()_+\\-={}\\$begin:math:display$\\$end:math:display$:;\"'<>,.?/~`|\\\\]{6,20}$", message = "password pattern error")
     private String password;        // Password for private group
     private List<ChatBotVO> chatBotVOList;
 

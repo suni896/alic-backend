@@ -2,21 +2,16 @@ package com.eduhk.alic.alicbackend.model.vo;
 
 import com.eduhk.alic.alicbackend.common.constant.GroupMemberType;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 /**
  * @author FuSu
- * @date 2025/1/13 13:13
+ * @date 2025/2/13 10:52
  */
-@Getter
-@Setter
 @Data
-public class UserInfoVO {
+public class GroupMemberInfoVO {
     private Long userId; // Primary Key
     private String userEmail; // User email
     private String userName; // Username
     private String userPortrait; // User profile picture
+    private GroupMemberType groupMemberType;
 }

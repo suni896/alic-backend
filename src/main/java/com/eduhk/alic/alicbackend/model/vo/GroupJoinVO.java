@@ -20,6 +20,6 @@ public class GroupJoinVO {
     @Min(value = 1, message = "joinMemberID must be greater than 0")
     private Long joinMemberID;
 
-    @Pattern(regexp = "^[A-Za-z0-9]{1,20}$", message = "password pattern error")
+    @Pattern(regexp = "^[A-Za-z0-9!@#$%^&*()_+\\-={}\\$begin:math:display$\\$end:math:display$:;\"'<>,.?/~`|\\\\]{6,20}$", message = "password pattern error")
     private String password;
 }

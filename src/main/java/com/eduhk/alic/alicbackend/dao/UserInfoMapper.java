@@ -1,6 +1,7 @@
 package com.eduhk.alic.alicbackend.dao;
 
 import com.eduhk.alic.alicbackend.model.entity.GroupInfoEntity;
+import com.eduhk.alic.alicbackend.model.entity.GroupMemberInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.UserInfoEntity;
 import org.apache.ibatis.annotations.*;
 
@@ -66,18 +67,20 @@ public interface UserInfoMapper extends BaseMapper<UserInfoEntity> {
     List<GroupInfoEntity> getGroupsByTagId(@Param("tagId") Long tagId);
 
     @Select("""
-        SELECT ui.user_id, ui.user_email, ui.user_portrait, ui.user_name
+        SELECT ui.user_id, ui.user_email, ui.user_portrait, ui.user_name, cg.group_admin
         FROM user_info ui 
         JOIN chat_group_user_info cgui ON ui.user_id = cgui.user_id 
+        JOIN chat_group cg ON cgui.group_id = cg.group_id
         WHERE cgui.group_id = #{groupId} and ui.user_condition < 100
     """)
     @Results({
             @Result(column = "user_id", property = "userId"),
             @Result(column = "user_email", property = "userEmail"),
             @Result(column = "user_portrait", property = "userPortrait"),
-            @Result(column = "user_name", property = "userName")
+            @Result(column = "user_name", property = "userName"),
+            @Result(column = "group_admin", property = "adminId")
     })
-    List<UserInfoEntity> getUsersByGroupId(@Param("groupId") Long groupId);
+    List<GroupMemberInfoEntity> getUsersByGroupId(@Param("groupId") Long groupId);
 
 
     @Select("""

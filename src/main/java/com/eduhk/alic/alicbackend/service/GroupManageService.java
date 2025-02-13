@@ -6,11 +6,9 @@ import com.eduhk.alic.alicbackend.common.exception.BaseException;
 import com.eduhk.alic.alicbackend.dao.ChatGroupBotMapper;
 import com.eduhk.alic.alicbackend.dao.GroupInfoMapper;
 import com.eduhk.alic.alicbackend.dao.UserInfoMapper;
-import com.eduhk.alic.alicbackend.model.entity.ChatBotInfoEntity;
-import com.eduhk.alic.alicbackend.model.entity.GroupInfoEntity;
-import com.eduhk.alic.alicbackend.model.entity.PasswordEntity;
-import com.eduhk.alic.alicbackend.model.entity.UserInfoEntity;
+import com.eduhk.alic.alicbackend.model.entity.*;
 import com.eduhk.alic.alicbackend.model.vo.*;
+import com.eduhk.alic.alicbackend.utils.AvatarUtils;
 import com.eduhk.alic.alicbackend.utils.Md5Utils;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
@@ -200,17 +198,21 @@ public class GroupManageService {
 
     }
 
-    public List<UserInfoVO> getMemberList(Long groupId) {
-        List<UserInfoEntity> userInfoEntities = userInfoMapper.getUsersByGroupId(groupId);
-        List<UserInfoVO> userInfoVOS = userInfoEntities.stream().map(
+    public List<GroupMemberInfoVO> getMemberList(Long groupId) {
+        List<GroupMemberInfoEntity> userInfoEntities = userInfoMapper.getUsersByGroupId(groupId);
+        List<GroupMemberInfoVO> userInfoVOS = userInfoEntities.stream().map(
                 entity ->{
-                    UserInfoVO userInfoVO = new UserInfoVO();
+                    GroupMemberInfoVO userInfoVO = new GroupMemberInfoVO();
                     userInfoVO.setUserId(entity.getUserId());
                     userInfoVO.setUserName(entity.getUserName());
                     userInfoVO.setUserEmail(entity.getUserEmail());
-                    //todo 头像
-//                    String userPortrait = AvatarUtils.transferToBase64(entity.getUserPortrait());
-//                    userInfoVO.setUserPortrait(userPortrait);
+                    String userPortrait = AvatarUtils.transferToBase64(entity.getUserPortrait());
+                    userInfoVO.setUserPortrait(userPortrait);
+                    if (Objects.equals(entity.getAdminId(), entity.getUserId())){
+                        userInfoVO.setGroupMemberType(GroupMemberType.ADMIN);
+                    }else {
+                        userInfoVO.setGroupMemberType(GroupMemberType.MEMBER);
+                    }
                     return userInfoVO;
                 }
         ).toList();

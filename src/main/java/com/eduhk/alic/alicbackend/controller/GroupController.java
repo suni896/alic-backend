@@ -1,5 +1,6 @@
 package com.eduhk.alic.alicbackend.controller;
 
+import cn.hutool.json.JSONObject;
 import com.eduhk.alic.alicbackend.common.constant.GroupMemberType;
 import com.eduhk.alic.alicbackend.common.constant.ResultCode;
 import com.eduhk.alic.alicbackend.model.vo.*;
@@ -38,7 +39,9 @@ public class GroupController {
         Long newGroupId = groupManageService.createGroup(groupInfoVO, userId);
         groupUserService.addUserToGroup(newGroupId, userId);
         groupManageService.createGroupBot(groupInfoVO.getChatBotVOList(), newGroupId);
-        return ResultResp.success(newGroupId);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.set("groupId",newGroupId);
+        return ResultResp.success(jsonObject);
     }
 
     @PostMapping("/edit_group_info")
