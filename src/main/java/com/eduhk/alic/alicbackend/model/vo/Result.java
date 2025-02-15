@@ -4,6 +4,7 @@ import com.eduhk.alic.alicbackend.common.constant.ResultCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -14,6 +15,7 @@ import java.io.Serializable;
 @Getter
 public class Result<T> implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 6308315887056661996L;
     private Integer code;
     private String message;

@@ -27,7 +27,7 @@ public class TagController {
     GroupSearchService groupSearchService;
 
     @PostMapping("/add_tag")
-    public Result addTag(@Validated @RequestBody TagNameVO TagName, @CurrentUser Long userId) {
+    public Result addTag(@Validated @RequestBody TagNameVO TagName, @RequestAttribute("userId") Long userId) {
         Long tagId = tagManageService.createNewTag(TagName.getTagName(), userId);
         TagIdVO tagIdVO = new TagIdVO();
         tagIdVO.setTagId(tagId);
@@ -35,42 +35,42 @@ public class TagController {
     }
 
     @PostMapping("/delete_tag")
-    public Result deleteTag(@Validated @RequestBody TagIdVO tagId, @CurrentUser Long userId) {
+    public Result deleteTag(@Validated @RequestBody TagIdVO tagId, @RequestAttribute("userId") Long userId) {
         tagManageService.verifyUserAdmission(userId, tagId.getTagId());
         tagManageService.deleteTagById(tagId.getTagId());
         return ResultResp.success(tagId);
     }
 
     @PostMapping("/add_group")
-    public Result addGroupToTag(@Validated @RequestBody TagGroupInfoVO tagGroupInfoVO, @CurrentUser Long userId) {
+    public Result addGroupToTag(@Validated @RequestBody TagGroupInfoVO tagGroupInfoVO, @RequestAttribute("userId") Long userId) {
         tagManageService.verifyUserAdmission(userId, tagGroupInfoVO.getTagId());
         tagManageService.addGroup(tagGroupInfoVO);
         return ResultResp.success();
     }
 
     @PostMapping("/remove_group")
-    public Result removeGroupFromTag(@Validated @RequestBody TagGroupInfoVO tagGroupInfoVO, @CurrentUser Long userId) {
+    public Result removeGroupFromTag(@Validated @RequestBody TagGroupInfoVO tagGroupInfoVO, @RequestAttribute("userId") Long userId) {
         tagManageService.verifyUserAdmission(userId, tagGroupInfoVO.getTagId());
         tagManageService.removeGroup(tagGroupInfoVO);
         return ResultResp.success();
     }
 
     @GetMapping("/get_tag_list")
-    public Result getTagList(@CurrentUser Long userId) {
+    public Result getTagList(@RequestAttribute("userId") Long userId) {
         List<TagInfoVO> tagInfoVOList = tagManageService.getTagList(userId);
         return ResultResp.success(tagInfoVOList);
     }
 
     @GetMapping("/get_tag_info")
     public Result getTagInfo(@Validated @RequestParam @NotNull(message = "tagId cannot be null")
-                                 @Min(value = 1, message = "tagId must be greater than 0") Long tagId, @CurrentUser Long userId) {
+                                 @Min(value = 1, message = "tagId must be greater than 0") Long tagId, @RequestAttribute("userId") Long userId) {
         tagManageService.verifyUserAdmission(userId, tagId);
         List<TagGroupVO> tagGroupVOS = tagManageService.getGroupBindTagList(tagId);
         return ResultResp.success(tagGroupVOS);
     }
 
     @PostMapping("/get_group_list_for_tag")
-    public Result getGroupList(@Validated @RequestBody GroupTagSearchVO groupTagSearchVO, @CurrentUser Long userId) {
+    public Result getGroupList(@Validated @RequestBody GroupTagSearchVO groupTagSearchVO, @RequestAttribute("userId") Long userId) {
         tagManageService.verifyUserAdmission(userId, groupTagSearchVO.getTagId());
         return ResultResp.success(groupSearchService.searchGroupForTag(userId, groupTagSearchVO.getTagId(),groupTagSearchVO.getKeyword()));
     }

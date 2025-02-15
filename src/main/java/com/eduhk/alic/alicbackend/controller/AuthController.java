@@ -14,6 +14,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -91,7 +93,7 @@ public class AuthController {
     //2. 生成JWT并保存(到哪里？redis or mysql)
     //
     @PostMapping("/login")
-    public Result login (@Validated @RequestBody LogInVO logInVO) {
+    public Result login (@Validated @RequestBody LogInVO logInVO, HttpServletResponse response) {
 
         log.info("LogInVO:{}", logInVO);
         // 查询用户是否在数据库中
@@ -113,7 +115,12 @@ public class AuthController {
             log.info("log in key,{}", logInKey);
             RedisUtils.delete(logInKey);
             RedisUtils.set(logInKey, token, 4, TimeUnit.HOURS);
-
+            Cookie cookie = new Cookie("JWT_TOKEN", token);
+            cookie.setHttpOnly(true); // 增加 HttpOnly 防止客户端 JavaScript 访问
+            cookie.setSecure(true);   // 确保 cookie 在 HTTPS 下才能传输
+            cookie.setPath("/v1/");      // 设置 cookie 的路径
+            cookie.setMaxAge(4 * 60 * 60); // 设置过期时间（4小时）
+            response.addCookie(cookie);   // 将 cookie 添加到响应中
             Map<String, String> resp = new HashMap<>();
             resp.put("Bearer Token", token);
             return ResultResp.success(resp);

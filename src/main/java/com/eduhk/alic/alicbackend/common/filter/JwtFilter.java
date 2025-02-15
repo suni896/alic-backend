@@ -1,5 +1,6 @@
 package com.eduhk.alic.alicbackend.common.filter;
 
+import cn.hutool.jwt.Claims;
 import com.eduhk.alic.alicbackend.utils.JwtUtils;
 import com.eduhk.alic.alicbackend.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import javax.servlet.*;
 import java.io.IOException;
 import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -39,12 +41,23 @@ public class JwtFilter implements Filter {
         if (httpServletRequest.getMethod().equals(HttpMethod.OPTIONS.name())) {
             chain.doFilter(httpServletRequest,httpServletResponse);
         }
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader == null) {
-            log.info("不包含 token 放行 无验证，直接返回");
-            return;
+//        String authHeader = httpServletRequest.getHeader("Authorization");
+//        if (authHeader == null) {
+//            log.info("不包含 token 放行 无验证，直接返回");
+//            return;
+//        }
+//        String jwtToken = authHeader.substring(7);
+        String jwtToken = "";
+        Cookie[] cookies = httpServletRequest.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("JWT_TOKEN".equals(cookie.getName())) {
+                    // 获取 JWT_TOKEN 的值
+                    jwtToken = cookie.getValue();
+                }
+            }
         }
-        String jwtToken = authHeader.substring(7);
+
         log.info("jwtToken:{}",jwtToken);
 //            BeanFactory factory = WebApplicationContextUtils.getRequiredWebApplicationContext(request.getServletContext());
 //            RedisUtils redisService = (RedisUtils) factory.getBean("redisUtils");
@@ -60,8 +73,10 @@ public class JwtFilter implements Filter {
             httpServletResponse.getWriter().flush();
             return;
         }
-        String userId = JwtUtils.parseTokenUserId(jwtToken).toString();
-        String token = RedisUtils.get(userId);
+        Long userId = JwtUtils.parseTokenUserId(jwtToken);
+        String userIdStr = userId.toString();
+        log.info("userId:{}",userIdStr);
+        String token = RedisUtils.get(userIdStr);
         if (token == null || !token.equalsIgnoreCase(jwtToken)) {
             log.info("token 不存在或不匹配，直接返回");
             // 设置 HTTP 响应状态码，表示未授权
@@ -72,7 +87,11 @@ public class JwtFilter implements Filter {
             httpServletResponse.getWriter().flush();
             return;
         }
+
+        // 可以将用户信息放入请求中，供后续处理使用
+        httpServletRequest.setAttribute("userId", userId);
         chain.doFilter(httpServletRequest, httpServletResponse);
 
     }
+
 }

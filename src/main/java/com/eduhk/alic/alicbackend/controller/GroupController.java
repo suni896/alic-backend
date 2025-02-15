@@ -35,7 +35,7 @@ public class GroupController {
 
     //创建群组
     @PostMapping("/create_new_group")
-    public Result createGroup(@Validated @RequestBody GroupInfoVO groupInfoVO, @CurrentUser Long userId) {
+    public Result createGroup(@Validated @RequestBody GroupInfoVO groupInfoVO, @RequestAttribute("userId") Long userId) {
         Long newGroupId = groupManageService.createGroup(groupInfoVO, userId);
         groupUserService.addUserToGroup(newGroupId, userId);
         groupManageService.createGroupBot(groupInfoVO.getChatBotVOList(), newGroupId);
@@ -45,7 +45,7 @@ public class GroupController {
     }
 
     @PostMapping("/edit_group_info")
-    public Result editGroup(@Validated @RequestBody GroupModifyInfoVO groupModifyInfoVO, @CurrentUser Long userId) {
+    public Result editGroup(@Validated @RequestBody GroupModifyInfoVO groupModifyInfoVO, @RequestAttribute("userId") Long userId) {
         Boolean isExist = groupUserService.verifyUserExistInGroup(groupModifyInfoVO.getGroupId(), userId);
         if (!isExist) {
             return ResultResp.failure(ResultCode.USER_NOT_IN_GROUP);
@@ -61,7 +61,7 @@ public class GroupController {
     @GetMapping("/get_group_info")
     public Result getGroupInfo(@RequestParam("groupId") @NotNull(message = "groupId cannot be null")
                                    @Min(value = 1, message = "groupId must be greater than 0") Long groupId,
-                               @CurrentUser Long userId) {
+                               @RequestAttribute("userId") Long userId) {
         Boolean isExist = groupUserService.verifyUserExistInGroup(groupId, userId);
         if (!isExist) {
             return ResultResp.failure(ResultCode.USER_NOT_IN_GROUP);
@@ -73,7 +73,7 @@ public class GroupController {
 
     //获取群组列表
     @PostMapping("/get_group_list")
-    public Result getGroupList(@Validated @RequestBody GroupSearchVO groupSearchVO, @CurrentUser Long userId) {
+    public Result getGroupList(@Validated @RequestBody GroupSearchVO groupSearchVO, @RequestAttribute("userId") Long userId) {
         PageVO<GroupSearchInfoVO> groupDemonVOPageVO = new PageVO<>();
         switch (groupSearchVO.getGroupDemonTypeEnum()){
             case ALLROOM -> {
@@ -93,7 +93,7 @@ public class GroupController {
     @GetMapping("/get_group_member_list")
     public Result getGroupMemberList(@RequestParam("groupId") @NotNull(message = "groupId cannot be null")
                                          @Min(value = 1, message = "groupId must be greater than 0")Long groupId,
-                                     @CurrentUser Long userId) {
+                                     @RequestAttribute("userId") Long userId) {
         Boolean isExist = groupUserService.verifyUserExistInGroup(groupId, userId);
         if (!isExist) {
             return ResultResp.failure(ResultCode.USER_NOT_IN_GROUP);
@@ -106,7 +106,7 @@ public class GroupController {
     @GetMapping("/get_group_chat_bot_list")
     public Result getGroupChatBotList(@RequestParam("groupId") @NotNull(message = "groupId cannot be null")
                                           @Min(value = 1, message = "groupId must be greater than 0")Long groupId,
-                                      @CurrentUser Long userId) {
+                                      @RequestAttribute("userId") Long userId) {
 
         Boolean isExist = groupUserService.verifyUserExistInGroup(groupId, userId);
         if (!isExist) {
@@ -121,14 +121,14 @@ public class GroupController {
     @GetMapping("/get_role_in_group")
     public Result getRoleInGroup(@RequestParam("groupId") @NotNull(message = "groupId cannot be null")
                                      @Min(value = 1, message = "groupId must be greater than 0")Long groupId,
-                                 @CurrentUser Long userId) {
+                                 @RequestAttribute("userId") Long userId) {
         GroupMemberType type = groupUserService.getGroupMemberType(groupId, userId);
         return ResultResp.success(type);
     }
     //添加成员
     @PostMapping("/add_group_member")
     public Result addGroupMember(@Validated @RequestBody GroupJoinVO groupJoinVO,
-                                 @CurrentUser Long userId) {
+                                 @RequestAttribute("userId") Long userId) {
         //校验人数<=100
         Long memberCount = groupManageService.getMemberCount(groupJoinVO.getGroupId());
         if (memberCount >= GROUP_MEMBER_LIMIT) {
@@ -147,7 +147,7 @@ public class GroupController {
     //移除成员
     @PostMapping("/remove_group_member")
     public Result removeGroupMember(@Validated @RequestBody GroupRemoveVO groupRemoveVO,
-                                    @CurrentUser Long userId) {
+                                    @RequestAttribute("userId") Long userId) {
 //        groupUserService.verifyGroupExist(groupRemoveVO.getGroupId());
 
         //admin可移除member, member可移除自己
