@@ -34,6 +34,11 @@ spring:
       ### 开启驼峰配置
       map-underscore-to-camel-case: true
       useGeneratedKeys: true
+  pagehelper:
+    reasonable: true
+    helperDialect: mysql
+    supportMethodsArguments: true
+    params: count=countSql
   mail:
     #默认的邮件编码
     default-encoding: UTF-8

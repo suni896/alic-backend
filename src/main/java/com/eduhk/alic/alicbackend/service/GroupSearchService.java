@@ -1,11 +1,12 @@
 package com.eduhk.alic.alicbackend.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.eduhk.alic.alicbackend.dao.GroupInfoMapper;
 import com.eduhk.alic.alicbackend.model.entity.GroupDetailInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.GroupTagEntity;
+import com.eduhk.alic.alicbackend.model.entity.TagInfoEntity;
 import com.eduhk.alic.alicbackend.model.vo.*;
-import com.github.pagehelper.Page;
-import com.github.pagehelper.PageHelper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -25,10 +26,10 @@ public class GroupSearchService {
     GroupInfoMapper groupInfoMapper;
 
     public PageVO<GroupSearchInfoVO> searchAllGroup(String keyword, Integer pageNum, Integer pageSize) {
-        Page<Object> page = PageHelper.startPage(pageNum, pageSize);
+        IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
         //todo groupid搜索
-        List<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getAllGroups(keyword);
-        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.stream().map(
+        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getAllGroups(keyword, page);
+        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.getRecords().stream().map(
                 groupInfoEntity -> {
                     GroupSearchInfoVO groupSearchInfoVO = new GroupSearchInfoVO();
                     groupSearchInfoVO.setGroupId(groupInfoEntity.getGroupId());
@@ -43,17 +44,16 @@ public class GroupSearchService {
                 }
         ).toList();
 
-        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, (int) page.getTotal(), groupSearchInfoVOS);
+        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, groupInfoEntities.getTotal() , groupSearchInfoVOS);
         return pageGroupSearchInfoVO;
     }
 
     public PageVO<GroupSearchInfoVO> searchPublicGroup(String keyword, Integer pageNum, Integer pageSize) {
+//        todo groupid搜索
+        IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
         //todo groupid搜索
-
-        Page<Object> page = PageHelper.startPage(pageNum, pageSize);
-        //todo groupid搜索
-        List<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getPublicGroups(keyword);
-        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.stream().map(
+        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getPublicGroups(keyword, page);
+        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.getRecords().stream().map(
                 groupInfoEntity -> {
                     GroupSearchInfoVO groupSearchInfoVO = new GroupSearchInfoVO();
                     groupSearchInfoVO.setGroupId(groupInfoEntity.getGroupId());
@@ -68,15 +68,15 @@ public class GroupSearchService {
                 }
         ).toList();
 
-        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, (int) page.getTotal(), groupSearchInfoVOS);
+        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, groupInfoEntities.getTotal(), groupSearchInfoVOS);
         return pageGroupSearchInfoVO;
     }
 
     public PageVO<GroupSearchInfoVO> searchJoinGroup(Long userId, String keyword, Integer pageNum, Integer pageSize) {
-        Page<Object> page = PageHelper.startPage(pageNum, pageSize);
+        IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
         //todo groupid搜索
-        List<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getJoinGroups(userId, keyword);
-        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.stream().map(
+        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getJoinGroups(userId, keyword, page);
+        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.getRecords().stream().map(
                 groupInfoEntity -> {
                     GroupSearchInfoVO groupSearchInfoVO = new GroupSearchInfoVO();
                     groupSearchInfoVO.setGroupId(groupInfoEntity.getGroupId());
@@ -91,7 +91,7 @@ public class GroupSearchService {
                 }
         ).toList();
 
-        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, (int) page.getTotal(), groupSearchInfoVOS);
+        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, groupInfoEntities.getTotal(), groupSearchInfoVOS);
         return pageGroupSearchInfoVO;
     }
 

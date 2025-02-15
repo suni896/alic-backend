@@ -55,9 +55,9 @@ public class TagController {
         return ResultResp.success();
     }
 
-    @GetMapping("/get_tag_list")
-    public Result getTagList(@RequestAttribute("userId") Long userId) {
-        List<TagInfoVO> tagInfoVOList = tagManageService.getTagList(userId);
+    @PostMapping("/get_tag_list")
+    public Result getTagList(@Validated @RequestBody TagSearchVO tagSearchVO, @RequestAttribute("userId") Long userId) {
+        PageVO<TagInfoVO> tagInfoVOList = tagManageService.searchTagList(userId, tagSearchVO.getKeyword(), tagSearchVO.getPageRequestVO().getPageNum(), tagSearchVO.getPageRequestVO().getPageSize());
         return ResultResp.success(tagInfoVOList);
     }
 

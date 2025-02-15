@@ -14,27 +14,27 @@ public class PageVO<T> {
     /**
      * 每页条数
      */
-    private int pageSize;
+    private long pageSize;
     /**
      * 页码
      */
-    private int pageNum;
+    private long pageNum;
 
     /**
      * 总页数
      */
-    private int pages;
+    private long pages;
     /**
      * 总条数
      */
-    private int total;
+    private long total;
 
     /**
      * 当前页的数据
      */
     private List<T> data;
 
-    public PageVO(int pageSize, int pageNum, int total, List<T> data) {
+    public PageVO(long pageSize, long pageNum, long total, List<T> data) {
         this.pageSize = pageSize;
         this.pageNum = pageNum;
         this.total = total;

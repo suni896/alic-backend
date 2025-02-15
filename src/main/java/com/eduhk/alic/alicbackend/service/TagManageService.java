@@ -1,5 +1,7 @@
 package com.eduhk.alic.alicbackend.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.eduhk.alic.alicbackend.common.constant.ResultCode;
 import com.eduhk.alic.alicbackend.common.exception.BaseException;
 import com.eduhk.alic.alicbackend.dao.ChatTagGroupRelationMapper;
@@ -8,9 +10,7 @@ import com.eduhk.alic.alicbackend.dao.TagInfoMapper;
 import com.eduhk.alic.alicbackend.model.entity.ChatTagGroupRelationEntity;
 import com.eduhk.alic.alicbackend.model.entity.GroupInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.TagInfoEntity;
-import com.eduhk.alic.alicbackend.model.vo.TagGroupInfoVO;
-import com.eduhk.alic.alicbackend.model.vo.TagGroupVO;
-import com.eduhk.alic.alicbackend.model.vo.TagInfoVO;
+import com.eduhk.alic.alicbackend.model.vo.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -89,6 +89,19 @@ public class TagManageService {
             return tagInfoVO;
         }).toList();
         return tagInfoVOS;
+    }
+
+    public PageVO<TagInfoVO> searchTagList(Long userId, String keyword, Integer pageNum, Integer pageSize) {
+        IPage<TagInfoEntity> page = new Page<>(pageNum, pageSize);
+        Page<TagInfoEntity> tagInfoEntities = tagInfoMapper.selectByUserSearchByTagName(userId, keyword, page);
+        List<TagInfoVO> tagInfoVOS = tagInfoEntities.getRecords().stream().map(tagInfoEntity -> {
+            TagInfoVO tagInfoVO = new TagInfoVO();
+            tagInfoVO.setTagName(tagInfoEntity.getTagName());
+            tagInfoVO.setTagId(tagInfoEntity.getTagId());
+            return tagInfoVO;
+        }).toList();
+        PageVO<TagInfoVO> pageTagInfoVO = new PageVO<> (pageSize, pageNum, tagInfoEntities.getTotal(), tagInfoVOS);
+        return pageTagInfoVO;
     }
 
     public List<TagGroupVO> getGroupBindTagList(Long tagId) {

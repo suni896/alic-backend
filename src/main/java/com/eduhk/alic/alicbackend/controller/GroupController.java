@@ -77,13 +77,13 @@ public class GroupController {
         PageVO<GroupSearchInfoVO> groupDemonVOPageVO = new PageVO<>();
         switch (groupSearchVO.getGroupDemonTypeEnum()){
             case ALLROOM -> {
-                groupDemonVOPageVO = groupSearchService.searchAllGroup(groupSearchVO.getKeyword(), groupSearchVO.getPageRequestVO().getPageSize(), groupSearchVO.getPageRequestVO().getPageNum());
+                groupDemonVOPageVO = groupSearchService.searchAllGroup(groupSearchVO.getKeyword(), groupSearchVO.getPageRequestVO().getPageNum(), groupSearchVO.getPageRequestVO().getPageSize());
             }
             case JOINEDROOM -> {
-                groupDemonVOPageVO = groupSearchService.searchJoinGroup(userId, groupSearchVO.getKeyword(),groupSearchVO.getPageRequestVO().getPageSize(), groupSearchVO.getPageRequestVO().getPageNum());
+                groupDemonVOPageVO = groupSearchService.searchJoinGroup(userId, groupSearchVO.getKeyword(),groupSearchVO.getPageRequestVO().getPageNum(), groupSearchVO.getPageRequestVO().getPageSize());
             }
             case PUBLICROOM -> {
-                groupDemonVOPageVO = groupSearchService.searchPublicGroup(groupSearchVO.getKeyword(), groupSearchVO.getPageRequestVO().getPageSize(), groupSearchVO.getPageRequestVO().getPageNum());
+                groupDemonVOPageVO = groupSearchService.searchPublicGroup(groupSearchVO.getKeyword(), groupSearchVO.getPageRequestVO().getPageNum(), groupSearchVO.getPageRequestVO().getPageSize());
             }
         }
         return ResultResp.success(groupDemonVOPageVO);

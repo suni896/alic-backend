@@ -1,9 +1,12 @@
 package com.eduhk.alic.alicbackend.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.eduhk.alic.alicbackend.model.entity.GroupDetailInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.GroupInfoEntity;
 import com.eduhk.alic.alicbackend.model.entity.GroupTagEntity;
+import com.eduhk.alic.alicbackend.model.entity.TagInfoEntity;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -84,7 +87,7 @@ public interface GroupInfoMapper extends BaseMapper<GroupInfoEntity> {
         "ORDER BY g.create_time DESC",
         "</script>"
     })
-    List<GroupDetailInfoEntity> getAllGroups(@Param("keyword") String keyword);
+    Page<GroupDetailInfoEntity> getAllGroups(@Param("keyword") String keyword, IPage<GroupDetailInfoEntity> page);
 //
 //    @Select({
 //            "<script>",
@@ -118,7 +121,7 @@ public interface GroupInfoMapper extends BaseMapper<GroupInfoEntity> {
         "ORDER BY g.create_time DESC",
         "</script>"
     })
-    List<GroupDetailInfoEntity> getPublicGroups(@Param("keyword") String keyword);
+    Page<GroupDetailInfoEntity> getPublicGroups(@Param("keyword") String keyword, IPage<GroupDetailInfoEntity> page);
 
 //    @Select({
 //            "<script>",
@@ -161,8 +164,9 @@ public interface GroupInfoMapper extends BaseMapper<GroupInfoEntity> {
             "ORDER BY g.create_time DESC",
             "</script>"
     })
-    List<GroupDetailInfoEntity> getJoinGroups(@Param("userId") Long userId,
-                                              @Param("keyword") String keyword);
+    Page<GroupDetailInfoEntity> getJoinGroups(@Param("userId") Long userId,
+                                              @Param("keyword") String keyword,
+                                              IPage<GroupDetailInfoEntity> page);
 
 
     @Select({

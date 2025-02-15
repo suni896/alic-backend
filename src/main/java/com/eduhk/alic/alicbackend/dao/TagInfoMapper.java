@@ -1,6 +1,9 @@
 package com.eduhk.alic.alicbackend.dao;
 
+import cn.hutool.db.sql.Order;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.eduhk.alic.alicbackend.model.entity.TagInfoEntity;
 import org.apache.ibatis.annotations.*;
 
@@ -23,6 +26,18 @@ public interface TagInfoMapper extends BaseMapper<TagInfoEntity> {
 
     @Select("SELECT * FROM chat_tag WHERE create_user = #{createUser} and tag_condition = 1")
     List<TagInfoEntity> selectByUser(@Param("createUser") Long createUser);
+
+    @Select({
+            "<script>",
+            "SELECT * FROM chat_tag",
+            "WHERE 1=1 ",
+            "AND create_user = #{createUser} AND tag_condition = 1",
+            "<if test='keyword != null and keyword != \"\"'>",
+            "    AND (tag_name LIKE CONCAT('%', #{keyword}, '%') )",
+            "</if>",
+            "</script>"
+    })
+    Page<TagInfoEntity> selectByUserSearchByTagName(@Param("createUser") Long createUser, @Param("keyword") String keyword, IPage<TagInfoEntity> page);
 
     @Update("UPDATE chat_tag SET tag_condition = #{tagCondition} WHERE tag_id = #{tagId}")
     int updateTagCondition(@Param("tagId") Long tagId, @Param("tagCondition") Long tagCondition);
