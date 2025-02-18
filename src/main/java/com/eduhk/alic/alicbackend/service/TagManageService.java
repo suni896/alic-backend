@@ -104,9 +104,10 @@ public class TagManageService {
         return pageTagInfoVO;
     }
 
-    public List<TagGroupVO> getGroupBindTagList(Long tagId) {
-        List<GroupInfoEntity> groupInfoEntities = groupInfoMapper.getGroupsByTagId(tagId);
-        List<TagGroupVO> tagGroupVOS = groupInfoEntities.stream().map(groupInfoEntity -> {
+    public PageVO<TagGroupVO> getGroupBindTagList(Long tagId, Integer pageNum, Integer pageSize) {
+        IPage<GroupInfoEntity> page = new Page<>(pageNum, pageSize);
+        Page<GroupInfoEntity> groupInfoEntities = groupInfoMapper.getGroupsByTagId(tagId, page);
+        List<TagGroupVO> tagGroupVOS = groupInfoEntities.getRecords().stream().map(groupInfoEntity -> {
             TagGroupVO tagGroupVO = new TagGroupVO();
             tagGroupVO.setGroupName(groupInfoEntity.getGroupName());
             tagGroupVO.setGroupId(Long.valueOf(groupInfoEntity.getGroupId()));
@@ -115,7 +116,8 @@ public class TagManageService {
             tagGroupVO.setGroupDescription(groupInfoEntity.getGroupDescription());
             return tagGroupVO;
         }).toList();
-        return tagGroupVOS;
+        PageVO<TagGroupVO> pageTagInfoVO = new PageVO<> (pageSize, pageNum, groupInfoEntities.getTotal(), tagGroupVOS);
+        return pageTagInfoVO;
     }
 
 }

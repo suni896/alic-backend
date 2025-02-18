@@ -25,74 +25,117 @@ public class GroupSearchService {
     @Resource
     GroupInfoMapper groupInfoMapper;
 
+//    public PageVO<GroupSearchInfoVO> searchAllGroup(String keyword, Integer pageNum, Integer pageSize) {
+//        IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
+//        //todo groupid搜索
+//        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getAllGroups(keyword, page);
+//        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.getRecords().stream().map(
+//                groupInfoEntity -> {
+//                    GroupSearchInfoVO groupSearchInfoVO = new GroupSearchInfoVO();
+//                    groupSearchInfoVO.setGroupId(groupInfoEntity.getGroupId());
+//                    groupSearchInfoVO.setGroupDescription(groupInfoEntity.getGroupDescription());
+//                    groupSearchInfoVO.setGroupName(groupInfoEntity.getGroupName());
+//                    groupSearchInfoVO.setGroupType(groupInfoEntity.getGroupType());
+//                    groupSearchInfoVO.setAdminId(groupInfoEntity.getGroupAdmin());
+//                    //todo 头像
+//                    groupSearchInfoVO.setAdminName(groupInfoEntity.getGroupAdminName());
+//                    groupSearchInfoVO.setMemberCount(groupInfoEntity.getGroupMemberCount());
+//                    return groupSearchInfoVO;
+//                }
+//        ).toList();
+//
+//        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, groupInfoEntities.getTotal() , groupSearchInfoVOS);
+//        return pageGroupSearchInfoVO;
+//    }
+//
+//    public PageVO<GroupSearchInfoVO> searchPublicGroup(String keyword, Integer pageNum, Integer pageSize) {
+////        todo groupid搜索
+//        IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
+//        //todo groupid搜索
+//        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getPublicGroups(keyword, page);
+//        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.getRecords().stream().map(
+//                groupInfoEntity -> {
+//                    GroupSearchInfoVO groupSearchInfoVO = new GroupSearchInfoVO();
+//                    groupSearchInfoVO.setGroupId(groupInfoEntity.getGroupId());
+//                    groupSearchInfoVO.setGroupDescription(groupInfoEntity.getGroupDescription());
+//                    groupSearchInfoVO.setGroupName(groupInfoEntity.getGroupName());
+//                    groupSearchInfoVO.setGroupType(groupInfoEntity.getGroupType());
+//                    groupSearchInfoVO.setAdminId(groupInfoEntity.getGroupAdmin());
+//                    //todo 头像
+//                    groupSearchInfoVO.setAdminName(groupInfoEntity.getGroupAdminName());
+//                    groupSearchInfoVO.setMemberCount(groupInfoEntity.getGroupMemberCount());
+//                    return groupSearchInfoVO;
+//                }
+//        ).toList();
+//
+//        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, groupInfoEntities.getTotal(), groupSearchInfoVOS);
+//        return pageGroupSearchInfoVO;
+//    }
+//
+//    public PageVO<GroupSearchInfoVO> searchJoinGroup(Long userId, String keyword, Integer pageNum, Integer pageSize) {
+//        IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
+//        //todo groupid搜索
+//        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getJoinGroups(userId, keyword, page);
+//        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.getRecords().stream().map(
+//                groupInfoEntity -> {
+//                    GroupSearchInfoVO groupSearchInfoVO = new GroupSearchInfoVO();
+//                    groupSearchInfoVO.setGroupId(groupInfoEntity.getGroupId());
+//                    groupSearchInfoVO.setGroupDescription(groupInfoEntity.getGroupDescription());
+//                    groupSearchInfoVO.setGroupName(groupInfoEntity.getGroupName());
+//                    groupSearchInfoVO.setGroupType(groupInfoEntity.getGroupType());
+//                    groupSearchInfoVO.setAdminId(groupInfoEntity.getGroupAdmin());
+//                    //todo 头像
+//                    groupSearchInfoVO.setAdminName(groupInfoEntity.getGroupAdminName());
+//                    groupSearchInfoVO.setMemberCount(groupInfoEntity.getGroupMemberCount());
+//                    return groupSearchInfoVO;
+//                }
+//        ).toList();
+//
+//        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, groupInfoEntities.getTotal(), groupSearchInfoVOS);
+//        return pageGroupSearchInfoVO;
+//    }
+
+    private List<GroupSearchInfoVO> convertToGroupSearchInfoVOList(List<GroupDetailInfoEntity> groupInfoEntities) {
+        return groupInfoEntities.stream().map(groupInfoEntity -> {
+            GroupSearchInfoVO groupSearchInfoVO = new GroupSearchInfoVO();
+            groupSearchInfoVO.setGroupId(groupInfoEntity.getGroupId());
+            groupSearchInfoVO.setGroupDescription(groupInfoEntity.getGroupDescription());
+            groupSearchInfoVO.setGroupName(groupInfoEntity.getGroupName());
+            groupSearchInfoVO.setGroupType(groupInfoEntity.getGroupType());
+            groupSearchInfoVO.setAdminId(groupInfoEntity.getGroupAdmin());
+            // TODO: 头像
+            groupSearchInfoVO.setAdminName(groupInfoEntity.getGroupAdminName());
+            groupSearchInfoVO.setMemberCount(groupInfoEntity.getGroupMemberCount());
+            return groupSearchInfoVO;
+        }).collect(Collectors.toList());
+    }
+
+    private PageVO<GroupSearchInfoVO> createPageVO(IPage<GroupDetailInfoEntity> groupInfoEntities, List<GroupSearchInfoVO> groupSearchInfoVOS, Integer pageNum, Integer pageSize) {
+        return new PageVO<>(pageSize, pageNum, groupInfoEntities.getTotal(), groupSearchInfoVOS);
+    }
+
     public PageVO<GroupSearchInfoVO> searchAllGroup(String keyword, Integer pageNum, Integer pageSize) {
         IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
-        //todo groupid搜索
+        // TODO: groupid搜索
         Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getAllGroups(keyword, page);
-        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.getRecords().stream().map(
-                groupInfoEntity -> {
-                    GroupSearchInfoVO groupSearchInfoVO = new GroupSearchInfoVO();
-                    groupSearchInfoVO.setGroupId(groupInfoEntity.getGroupId());
-                    groupSearchInfoVO.setGroupDescription(groupInfoEntity.getGroupDescription());
-                    groupSearchInfoVO.setGroupName(groupInfoEntity.getGroupName());
-                    groupSearchInfoVO.setGroupType(groupInfoEntity.getGroupType());
-                    groupSearchInfoVO.setAdminId(groupInfoEntity.getGroupAdmin());
-                    //todo 头像
-                    groupSearchInfoVO.setAdminName(groupInfoEntity.getGroupAdminName());
-                    groupSearchInfoVO.setMemberCount(groupInfoEntity.getGroupMemberCount());
-                    return groupSearchInfoVO;
-                }
-        ).toList();
-
-        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, groupInfoEntities.getTotal() , groupSearchInfoVOS);
-        return pageGroupSearchInfoVO;
+        List<GroupSearchInfoVO> groupSearchInfoVOS = convertToGroupSearchInfoVOList(groupInfoEntities.getRecords());
+        return createPageVO(groupInfoEntities, groupSearchInfoVOS, pageNum, pageSize);
     }
 
     public PageVO<GroupSearchInfoVO> searchPublicGroup(String keyword, Integer pageNum, Integer pageSize) {
-//        todo groupid搜索
         IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
-        //todo groupid搜索
+        // TODO: groupid搜索
         Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getPublicGroups(keyword, page);
-        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.getRecords().stream().map(
-                groupInfoEntity -> {
-                    GroupSearchInfoVO groupSearchInfoVO = new GroupSearchInfoVO();
-                    groupSearchInfoVO.setGroupId(groupInfoEntity.getGroupId());
-                    groupSearchInfoVO.setGroupDescription(groupInfoEntity.getGroupDescription());
-                    groupSearchInfoVO.setGroupName(groupInfoEntity.getGroupName());
-                    groupSearchInfoVO.setGroupType(groupInfoEntity.getGroupType());
-                    groupSearchInfoVO.setAdminId(groupInfoEntity.getGroupAdmin());
-                    //todo 头像
-                    groupSearchInfoVO.setAdminName(groupInfoEntity.getGroupAdminName());
-                    groupSearchInfoVO.setMemberCount(groupInfoEntity.getGroupMemberCount());
-                    return groupSearchInfoVO;
-                }
-        ).toList();
-
-        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, groupInfoEntities.getTotal(), groupSearchInfoVOS);
-        return pageGroupSearchInfoVO;
+        List<GroupSearchInfoVO> groupSearchInfoVOS = convertToGroupSearchInfoVOList(groupInfoEntities.getRecords());
+        return createPageVO(groupInfoEntities, groupSearchInfoVOS, pageNum, pageSize);
     }
 
     public PageVO<GroupSearchInfoVO> searchJoinGroup(Long userId, String keyword, Integer pageNum, Integer pageSize) {
         IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
-        //todo groupid搜索
+        // TODO: groupid搜索
         Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getJoinGroups(userId, keyword, page);
-        List<GroupSearchInfoVO> groupSearchInfoVOS = groupInfoEntities.getRecords().stream().map(
-                groupInfoEntity -> {
-                    GroupSearchInfoVO groupSearchInfoVO = new GroupSearchInfoVO();
-                    groupSearchInfoVO.setGroupId(groupInfoEntity.getGroupId());
-                    groupSearchInfoVO.setGroupDescription(groupInfoEntity.getGroupDescription());
-                    groupSearchInfoVO.setGroupName(groupInfoEntity.getGroupName());
-                    groupSearchInfoVO.setGroupType(groupInfoEntity.getGroupType());
-                    groupSearchInfoVO.setAdminId(groupInfoEntity.getGroupAdmin());
-                    //todo 头像
-                    groupSearchInfoVO.setAdminName(groupInfoEntity.getGroupAdminName());
-                    groupSearchInfoVO.setMemberCount(groupInfoEntity.getGroupMemberCount());
-                    return groupSearchInfoVO;
-                }
-        ).toList();
-
-        PageVO<GroupSearchInfoVO> pageGroupSearchInfoVO = new PageVO<> (pageSize, pageNum, groupInfoEntities.getTotal(), groupSearchInfoVOS);
-        return pageGroupSearchInfoVO;
+        List<GroupSearchInfoVO> groupSearchInfoVOS = convertToGroupSearchInfoVOList(groupInfoEntities.getRecords());
+        return createPageVO(groupInfoEntities, groupSearchInfoVOS, pageNum, pageSize);
     }
 
     public List<TagGroupBindVO> searchGroupForTag(Long userId, Long tagId, String keyword) {

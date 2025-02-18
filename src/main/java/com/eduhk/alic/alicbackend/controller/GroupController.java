@@ -1,13 +1,14 @@
 package com.eduhk.alic.alicbackend.controller;
 
 import cn.hutool.json.JSONObject;
+import com.eduhk.alic.alicbackend.common.constant.GroupDemonTypeEnum;
 import com.eduhk.alic.alicbackend.common.constant.GroupMemberType;
 import com.eduhk.alic.alicbackend.common.constant.ResultCode;
+import com.eduhk.alic.alicbackend.common.factory.GroupSearchStrategyFactory;
 import com.eduhk.alic.alicbackend.model.vo.*;
-import com.eduhk.alic.alicbackend.service.GroupManageService;
-import com.eduhk.alic.alicbackend.service.GroupSearchService;
-import com.eduhk.alic.alicbackend.service.GroupUserService;
+import com.eduhk.alic.alicbackend.service.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
@@ -28,9 +29,14 @@ public class GroupController {
     GroupManageService groupManageService;
     @Resource
     GroupUserService groupUserService;
-    @Resource
-    GroupSearchService groupSearchService;
 
+    @Resource
+    private final GroupSearchStrategyFactory strategyFactory;
+
+    @Autowired
+    public GroupController(GroupSearchStrategyFactory strategyFactory) {
+        this.strategyFactory = strategyFactory;
+    }
     private static final Integer GROUP_MEMBER_LIMIT = 100;
 
     //创建群组
@@ -74,18 +80,25 @@ public class GroupController {
     //获取群组列表
     @PostMapping("/get_group_list")
     public Result getGroupList(@Validated @RequestBody GroupSearchVO groupSearchVO, @RequestAttribute("userId") Long userId) {
-        PageVO<GroupSearchInfoVO> groupDemonVOPageVO = new PageVO<>();
-        switch (groupSearchVO.getGroupDemonTypeEnum()){
-            case ALLROOM -> {
-                groupDemonVOPageVO = groupSearchService.searchAllGroup(groupSearchVO.getKeyword(), groupSearchVO.getPageRequestVO().getPageNum(), groupSearchVO.getPageRequestVO().getPageSize());
-            }
-            case JOINEDROOM -> {
-                groupDemonVOPageVO = groupSearchService.searchJoinGroup(userId, groupSearchVO.getKeyword(),groupSearchVO.getPageRequestVO().getPageNum(), groupSearchVO.getPageRequestVO().getPageSize());
-            }
-            case PUBLICROOM -> {
-                groupDemonVOPageVO = groupSearchService.searchPublicGroup(groupSearchVO.getKeyword(), groupSearchVO.getPageRequestVO().getPageNum(), groupSearchVO.getPageRequestVO().getPageSize());
-            }
-        }
+//        PageVO<GroupSearchInfoVO> groupDemonVOPageVO = new PageVO<>();
+//        switch (groupSearchVO.getGroupDemonTypeEnum()){
+//            case ALLROOM -> {
+//                groupDemonVOPageVO = groupSearchService.searchAllGroup(groupSearchVO.getKeyword(), groupSearchVO.getPageRequestVO().getPageNum(), groupSearchVO.getPageRequestVO().getPageSize());
+//            }
+//            case JOINEDROOM -> {
+//                groupDemonVOPageVO = groupSearchService.searchJoinGroup(userId, groupSearchVO.getKeyword(),groupSearchVO.getPageRequestVO().getPageNum(), groupSearchVO.getPageRequestVO().getPageSize());
+//            }
+//            case PUBLICROOM -> {
+//                groupDemonVOPageVO = groupSearchService.searchPublicGroup(groupSearchVO.getKeyword(), groupSearchVO.getPageRequestVO().getPageNum(), groupSearchVO.getPageRequestVO().getPageSize());
+//            }
+//        }
+//        return ResultResp.success(groupDemonVOPageVO);
+        GroupDemonTypeEnum groupDemonTypeEnum = groupSearchVO.getGroupDemonTypeEnum();
+        GroupSearchStrategy strategy = strategyFactory.getStrategy(groupDemonTypeEnum);
+
+        PageVO<GroupSearchInfoVO> groupDemonVOPageVO = strategy.searchGroup(groupSearchVO.getKeyword(),
+                groupSearchVO.getPageRequestVO(), userId );
+
         return ResultResp.success(groupDemonVOPageVO);
     }
 

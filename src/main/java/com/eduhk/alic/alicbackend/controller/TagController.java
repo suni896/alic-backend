@@ -1,5 +1,6 @@
 package com.eduhk.alic.alicbackend.controller;
 
+import cn.hutool.json.JSONObject;
 import com.eduhk.alic.alicbackend.model.vo.*;
 import com.eduhk.alic.alicbackend.service.GroupSearchService;
 import com.eduhk.alic.alicbackend.service.TagManageService;
@@ -29,9 +30,9 @@ public class TagController {
     @PostMapping("/add_tag")
     public Result addTag(@Validated @RequestBody TagNameVO TagName, @RequestAttribute("userId") Long userId) {
         Long tagId = tagManageService.createNewTag(TagName.getTagName(), userId);
-        TagIdVO tagIdVO = new TagIdVO();
-        tagIdVO.setTagId(tagId);
-        return ResultResp.success(tagIdVO);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.set("tagId",tagId);
+        return ResultResp.success(jsonObject);
     }
 
     @PostMapping("/delete_tag")
@@ -61,11 +62,10 @@ public class TagController {
         return ResultResp.success(tagInfoVOList);
     }
 
-    @GetMapping("/get_tag_info")
-    public Result getTagInfo(@Validated @RequestParam @NotNull(message = "tagId cannot be null")
-                                 @Min(value = 1, message = "tagId must be greater than 0") Long tagId, @RequestAttribute("userId") Long userId) {
-        tagManageService.verifyUserAdmission(userId, tagId);
-        List<TagGroupVO> tagGroupVOS = tagManageService.getGroupBindTagList(tagId);
+    @PostMapping("/get_tag_info")
+    public Result getTagInfo(@Validated @RequestBody TagSearchInfoVO tagSearchInfoVO, @RequestAttribute("userId") Long userId) {
+        tagManageService.verifyUserAdmission(userId, tagSearchInfoVO.getTagId());
+        PageVO<TagGroupVO> tagGroupVOS = tagManageService.getGroupBindTagList(tagSearchInfoVO.getTagId(), tagSearchInfoVO.getPageRequestVO().getPageNum(), tagSearchInfoVO.getPageRequestVO().getPageSize());
         return ResultResp.success(tagGroupVOS);
     }
 

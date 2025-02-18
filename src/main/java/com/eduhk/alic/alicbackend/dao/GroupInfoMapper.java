@@ -54,7 +54,7 @@ public interface GroupInfoMapper extends BaseMapper<GroupInfoEntity> {
             @Result(column = "update_time", property = "updateTime"),
             @Result(column = "group_admin", property = "groupAdmin")
     })
-    List<GroupInfoEntity> getGroupsByTagId(@Param("tagId") Long tagId);
+    Page<GroupInfoEntity> getGroupsByTagId(@Param("tagId") Long tagId, IPage<GroupInfoEntity> page);
 
 //    @Select({
 //            "<script>",
@@ -198,7 +198,7 @@ public interface GroupInfoMapper extends BaseMapper<GroupInfoEntity> {
             "    AND ctgr.tag_id = #{tagId} ",
             "</if>",
             "<if test='keyword != null and keyword != \"\"'>",
-            "    AND (g.group_name LIKE CONCAT('%', #{keyword}, '%') ",
+            "    AND (g.group_name LIKE CONCAT('%', #{keyword}, '%')) ",
             "</if>",
             "GROUP BY g.group_id",
             "ORDER BY g.create_time DESC",

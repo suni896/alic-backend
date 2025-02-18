@@ -71,6 +71,7 @@ public class AuthController {
         log.info("verfiCode,{}", verfiCode);
 
         //发送验证码
+        //todo 关于邮件发送失败，这里改成异步了，所以要记录在db里面而不是返回错误码
         try {
             smtpService.sendMail(smtpVO, verfiCode);
         } catch (Exception e) {
