@@ -6,7 +6,7 @@ server:
   #开启https，配置跟证书一一对应
   ssl:
     enabled: true
-    key-store: classpath:alic_https_rsa.keystore  # 证书文件路径
+    key-store: classpath:alic_https_rsa.p12  # 证书文件路径
     key-store-password: 123456   # 证书密码
     key-store-type: PKCS12
     enabled-protocols: TLSv1.2,TLSv1.3

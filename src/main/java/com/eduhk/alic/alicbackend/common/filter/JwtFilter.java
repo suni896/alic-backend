@@ -33,7 +33,7 @@ public class JwtFilter implements Filter {
 //                break;
 //            }
 //        }
-        if (url.contains("/auth") || url.contains("/swagger-ui")) {
+        if (url.contains("/auth") || url.contains("/swagger-ui") || url.contains("/ws")) {
             chain.doFilter(httpServletRequest,httpServletResponse);
             return;
         }

@@ -1,6 +1,32 @@
-<html>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STOMP WebSocket</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
 <body>
-<h1>hello word!!!</h1>
-<p>this is a html page</p>
+<h2>打开浏览器控制台查看 WebSocket 交互</h2>
+<script>
+    const socket = new SockJS("https://localhost/ws");
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, () => {
+        console.log("WebSocket 连接成功");
+
+        stompClient.subscribe("/topic/group/1", (message) => {
+            console.log("收到消息：", JSON.parse(message.body));
+        });
+
+        stompClient.send("/app/chat/1", {}, JSON.stringify({
+            senderId: 123,
+            content: "Hello, world!"
+        }));
+    }, (error) => {
+        console.error("WebSocket 连接失败:", error);
+    });
+</script>
 </body>
 </html>
