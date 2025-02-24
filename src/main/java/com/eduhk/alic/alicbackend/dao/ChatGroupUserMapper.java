@@ -30,6 +30,9 @@ public interface ChatGroupUserMapper extends BaseMapper<ChatGroupUserEntity> {
     @Select("SELECT * FROM chat_group_user_info WHERE group_id = #{groupId}")
     List<ChatGroupUserEntity> selectByGroupId(@Param("groupId") Long groupId);
 
+    @Select("SELECT user_id FROM chat_group_user_info WHERE group_id = #{groupId}")
+    List<Long> selectMemberIdsByGroupId(@Param("groupId") Long groupId);
+
     // 根据 userId 查询该用户所在的所有群组
     @Select("SELECT * FROM chat_group_user_info WHERE user_id = #{userId}")
     List<ChatGroupUserEntity> selectByUserId(@Param("userId") Long userId);

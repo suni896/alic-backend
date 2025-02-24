@@ -984,7 +984,7 @@ public class RedisUtils {
      * @param key
      * @return
      */
-    public Set<String> setMembers(String key) {
+    public static Set<String> setMembers(String key) {
         return redisTemplate.opsForSet().members(key);
     }
 

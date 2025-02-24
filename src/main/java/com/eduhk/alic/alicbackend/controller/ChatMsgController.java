@@ -3,6 +3,7 @@ package com.eduhk.alic.alicbackend.controller;
 import com.eduhk.alic.alicbackend.model.vo.ChatMsgRespVO;
 import com.eduhk.alic.alicbackend.model.vo.ChatMsgVO;
 import com.eduhk.alic.alicbackend.service.ChatMsgService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -30,32 +31,25 @@ public class ChatMsgController {
     private SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/chat/{groupId}")
-    @SendTo("/topic/group/{groupId}")
-    public ChatMsgRespVO sendMessage(@DestinationVariable Long groupId, @Payload ChatMsgVO message) {
+    public void sendMessage(@DestinationVariable Long groupId, @Payload ChatMsgVO message) throws JsonProcessingException {
         log.info("groupId: "+groupId);
         log.info(message.toString());
-         //TODO 持久化消息
+
         chatMsgService.insertChatMsg(message);
-        //加入队列，进行消息推送
-        ChatMsgRespVO respVO = new ChatMsgRespVO();
-        respVO.setMsgType(message.getMsgType());
-        respVO.setGroupId(groupId);
-        respVO.setSenderId(message.getSenderId());
-        respVO.setContent(message.getContent());
-        respVO.setCreateTime(message.getCreateTime());
-        return respVO;
+        chatMsgService.sendMessageToOnlineMember(message);
+
     }
 
     // 离线消息拉取接口，用户登录后调用
-    @RequestMapping("/getOfflineMessages")
-    public List<ChatMsgRespVO> getOfflineMessages(Long userId) {
-        Date retriveTime = new Date(); // 假设用户登录时间为2023-01-01 00:00:00
-        List<ChatMsgRespVO> offlineMessages = chatMsgService.getOfflineMessagesForUser(userId, retriveTime);
-
-        // 将离线消息推送到用户
-        for (ChatMsgRespVO msg : offlineMessages) {
-            messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/offline", msg);
-        }
-        return offlineMessages;
-    }
+//    @RequestMapping("/getOfflineMessages")
+//    public List<ChatMsgRespVO> getOfflineMessages(Long userId) {
+//        Date retriveTime = new Date(); // 假设用户登录时间为2023-01-01 00:00:00
+//        List<ChatMsgRespVO> offlineMessages = chatMsgService.getOfflineMessagesForUser(userId, retriveTime);
+//
+//        // 将离线消息推送到用户
+//        for (ChatMsgRespVO msg : offlineMessages) {
+//            messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/offline", msg);
+//        }
+//        return offlineMessages;
+//    }
 }

@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import javax.annotation.Resource;
+
 /**
  * @author FuSu
  * @date 2025/2/18 13:55
@@ -25,6 +27,18 @@ public class WebSocketEventListener {
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
         log.info("Received a new web socket connection");
+        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+
+        String username = (String) headerAccessor.getSessionAttributes().get("username");
+        if(username != null) {
+            log.info("User Disconnected : " + username);
+
+            ChatMsgVO chatMessage = new ChatMsgVO();
+            chatMessage.setType(MessageTypeEnum.JOIN);
+
+            //todo 保存登录状态
+            messagingTemplate.convertAndSend("/topic/public", chatMessage);
+        }
     }
 
     @EventListener
@@ -38,7 +52,7 @@ public class WebSocketEventListener {
             ChatMsgVO chatMessage = new ChatMsgVO();
             chatMessage.setType(MessageTypeEnum.LEAVE);
 
-
+            //todo 删除登录状态
             messagingTemplate.convertAndSend("/topic/public", chatMessage);
         }
     }

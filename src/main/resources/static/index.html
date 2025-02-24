@@ -13,20 +13,41 @@
     const socket = new SockJS("https://localhost/ws");
     const stompClient = Stomp.over(socket);
 
-    stompClient.connect({}, () => {
-        console.log("WebSocket 连接成功");
+    // stompClient.connect({}, () => {
+    //     console.log("WebSocket 连接成功");
+    //
+    //     stompClient.subscribe("/topic/group/1", (message) => {
+    //         console.log("收到消息：", JSON.parse(message.body));
+    //     });
+    //
+    //     stompClient.send("/app/chat/1", {}, JSON.stringify({
+    //         senderId: 123,
+    //         content: "Hello, world!"
+    //     }));
+    // }, (error) => {
+    //     console.error("WebSocket 连接失败:", error);
+    // });
+    // 连接到 STOMP 服务器
+    stompClient.connect({}, function (frame) {
+        console.log('Connected: ' + frame);
 
-        stompClient.subscribe("/topic/group/1", (message) => {
-            console.log("收到消息：", JSON.parse(message.body));
+        // 订阅到用户特定的消息队列
+        var userId = 1;  // 假设当前用户 ID 为 1
+        var groupId = 101;
+        stompClient.subscribe('/user/' + userId + '/topic/group/' + groupId, function (message) {
+            // 处理接收到的消息
+            console.log('Received message: ' + message.body);
+            displayMessage(message.body);  // 将消息显示在界面上
         });
-
-        stompClient.send("/app/chat/1", {}, JSON.stringify({
-            senderId: 123,
-            content: "Hello, world!"
-        }));
-    }, (error) => {
-        console.error("WebSocket 连接失败:", error);
     });
+
+    // 显示消息的函数
+    function displayMessage(message) {
+        var messageContainer = document.getElementById('messages');
+        var newMessage = document.createElement('div');
+        newMessage.innerText = message;
+        messageContainer.appendChild(newMessage);
+    }
 </script>
 </body>
 </html>
