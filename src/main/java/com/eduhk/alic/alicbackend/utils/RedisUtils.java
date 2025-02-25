@@ -652,7 +652,7 @@ public class RedisUtils {
      * @param key
      * @return 删除的元素
      */
-    public String lLeftPop(String key) {
+    public static String lLeftPop(String key) {
         return redisTemplate.opsForList().leftPop(key);
     }
 
@@ -726,7 +726,7 @@ public class RedisUtils {
      * @param value
      * @return
      */
-    public Long lRemove(String key, long index, String value) {
+    public static Long lRemove(String key, long index, String value) {
         return redisTemplate.opsForList().remove(key, index, value);
     }
 
@@ -747,7 +747,7 @@ public class RedisUtils {
      * @param key
      * @return
      */
-    public Long lLen(String key) {
+    public static Long lLen(String key) {
         return redisTemplate.opsForList().size(key);
     }
 

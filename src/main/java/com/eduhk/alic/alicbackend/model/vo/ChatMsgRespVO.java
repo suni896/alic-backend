@@ -12,6 +12,7 @@ import java.util.Date;
  */
 @Data
 public class ChatMsgRespVO {
+    private Long infoId;
     private Long groupId;
     private Long senderId;
     private String content;

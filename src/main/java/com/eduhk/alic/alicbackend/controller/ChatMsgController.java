@@ -35,21 +35,31 @@ public class ChatMsgController {
         log.info("groupId: "+groupId);
         log.info(message.toString());
 
-        chatMsgService.insertChatMsg(message);
-        chatMsgService.sendMessageToOnlineMember(message);
+        Long infoId = chatMsgService.insertChatMsg(message);
+        chatMsgService.sendMessageToOnlineMember(message, infoId);
 
     }
 
     // 离线消息拉取接口，用户登录后调用
-//    @RequestMapping("/getOfflineMessages")
-//    public List<ChatMsgRespVO> getOfflineMessages(Long userId) {
-//        Date retriveTime = new Date(); // 假设用户登录时间为2023-01-01 00:00:00
-//        List<ChatMsgRespVO> offlineMessages = chatMsgService.getOfflineMessagesForUser(userId, retriveTime);
-//
-//        // 将离线消息推送到用户
-//        for (ChatMsgRespVO msg : offlineMessages) {
-//            messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/offline", msg);
-//        }
-//        return offlineMessages;
-//    }
+    @RequestMapping("/getOfflineMessages")
+    public List<ChatMsgRespVO> getOfflineMessages(Long userId, Long groupId, int pageNum, int pageSize) {
+        List<ChatMsgRespVO> offlineMessages = chatMsgService.getOfflineMessages(groupId, userId, pageNum, pageSize);
+
+        // 将离线消息推送到用户
+        for (ChatMsgRespVO msg : offlineMessages) {
+            messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/offline", msg);
+        }
+        return offlineMessages;
+    }
+
+    @RequestMapping("/getOfflineMessages")
+    public List<ChatMsgRespVO> getReconnectMessages(Long userId, Long groupId, Long lastMsgId) {
+        List<ChatMsgRespVO> offlineMessages = chatMsgService.getReconnectOfflineMessages(groupId, userId, lastMsgId);
+
+        // 将消息推送到用户
+        for (ChatMsgRespVO msg : offlineMessages) {
+            messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/offline", msg);
+        }
+        return offlineMessages;
+    }
 }

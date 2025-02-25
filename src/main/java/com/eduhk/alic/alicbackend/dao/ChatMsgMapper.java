@@ -1,7 +1,10 @@
 package com.eduhk.alic.alicbackend.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.eduhk.alic.alicbackend.model.entity.ChatMsgEntity;
+import com.eduhk.alic.alicbackend.model.entity.GroupDetailInfoEntity;
 import org.apache.ibatis.annotations.*;
 
 import java.util.Date;
@@ -17,7 +20,7 @@ public interface ChatMsgMapper extends BaseMapper<ChatMsgEntity> {
     @Insert("INSERT INTO `chat_msg` (`msg_source_type`, `msg_dest`, `msg_source`, `msg_type`, `msg_content`, `create_time`) " +
             "VALUES (#{msgSourceType}, #{msgDest}, #{msgSource}, #{msgType}, #{msgContent}, #{createTime})")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    void insertChatMsg(ChatMsgEntity chatMsg);
+    int insertChatMsg(ChatMsgEntity chatMsg);
 
     // 根据群组ID查询消息
     @Select("SELECT * FROM `chat_msg` WHERE `msg_dest` = #{msgDest} ORDER BY `create_time` DESC")
@@ -34,4 +37,9 @@ public interface ChatMsgMapper extends BaseMapper<ChatMsgEntity> {
     @Select("SELECT * FROM `chat_msg` WHERE `msg_dest` = #{groupID} AND `create_time` > #{retriveTime} ORDER BY `create_time` ASC")
     List<ChatMsgEntity> getOfflineMessagesForUser(@Param("groupID") Long groupID, @Param("retriveTime")Date retriveTime);
 
+    @Select("SELECT * FROM `chat_msg` WHERE `msg_dest` = #{groupID} orderBy `id` DESC")
+    Page<ChatMsgEntity> getChatMsgByPage(@Param("groupID") Long groupID, IPage<ChatMsgEntity> page);
+
+    @Select("SELECT * FROM chat_msg WHERE `msg_dest` = #{groupID} AND id > #{id} orderBy `id` ASC")
+    List<ChatMsgEntity> getMessagesByIdGreaterThan(@Param("groupID") Long groupID, @Param("id") Long id);
 }
