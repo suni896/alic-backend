@@ -26,7 +26,6 @@ public class JwtFilter implements Filter {
 
         String url = ((HttpServletRequest) request).getRequestURI();
         log.info("url:{}",url);
-        //TODO 排除一部分接口，不需要登录验证
 //        for (String excludedUrl : excludedUrlList) {
 //            if (Pattern.matches(excludedUrl.replace("*", ".*"), url)) {
 //                isMatch = true;
