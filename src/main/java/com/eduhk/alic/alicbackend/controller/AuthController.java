@@ -117,8 +117,8 @@ public class AuthController {
             RedisUtils.delete(logInKey);
             RedisUtils.set(logInKey, token, 4, TimeUnit.HOURS);
             Cookie cookie = new Cookie("JWT_TOKEN", token);
-            cookie.setHttpOnly(true); // 增加 HttpOnly 防止客户端 JavaScript 访问
-            cookie.setSecure(true);   // 确保 cookie 在 HTTPS 下才能传输
+//            cookie.setHttpOnly(true); // 增加 HttpOnly 防止客户端 JavaScript 访问
+//            cookie.setSecure(true);   // 确保 cookie 在 HTTPS 下才能传输
             cookie.setPath("/v1/");      // 设置 cookie 的路径
             cookie.setMaxAge(4 * 60 * 60); // 设置过期时间（4小时）
             response.addCookie(cookie);   // 将 cookie 添加到响应中
