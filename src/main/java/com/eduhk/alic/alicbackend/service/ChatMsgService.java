@@ -13,6 +13,7 @@ import com.eduhk.alic.alicbackend.model.vo.ChatMsgVO;
 import com.eduhk.alic.alicbackend.utils.RedisUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
  * @date 2025/2/20 15:25
  */
 @Service
+@Slf4j
 public class ChatMsgService {
     @Resource
     ChatMsgMapper chatMsgMapper;
@@ -51,14 +53,16 @@ public class ChatMsgService {
         chatMsgEntity.setMsgContent(chatMsgVO.getContent());
         chatMsgEntity.setMsgType(chatMsgVO.getMsgType());
         chatMsgEntity.setCreateTime(chatMsgVO.getCreateTime());
+        chatMsgEntity.setMsgSourceType(0);
         chatMsgMapper.insertChatMsg(chatMsgEntity);
         return chatMsgEntity.getId();
     }
 
 
     public void sendMessageToOnlineMember(ChatMsgVO chatMsgVO, Long infoId) throws JsonProcessingException {
-        //获取在线member列表
+        //获取群组成员列表
         List<Long> groupMemberIds = chatGroupUserMapper.selectMemberIdsByGroupId(chatMsgVO.getGroupId());
+        groupMemberIds.forEach(groupMemberId -> {log.info("groupMemberId: "+groupMemberId);});
         ChatMsgRespVO respVO = new ChatMsgRespVO();
         respVO.setMsgType(chatMsgVO.getMsgType());
         respVO.setGroupId(chatMsgVO.getGroupId());
@@ -72,14 +76,20 @@ public class ChatMsgService {
         for (Long groupMemberId : groupMemberIds) {
             storeMessageToInbox(chatMsgVO.getGroupId(), groupMemberId, messageJson);
         }
+        //获取在线member列表
         Set<String> onlineUserIds = RedisUtils.setMembers(chatgroupConnectPrefix+chatMsgVO.getGroupId());
-        List<Long> offlineMemberIds = new ArrayList<>(groupMemberIds);
-        // 移除那些在线的成员,得到离线的成员
-        offlineMemberIds.removeAll(onlineUserIds.stream()
-                .map(Long::parseLong).toList());
+
+//        List<Long> offlineMemberIds = new ArrayList<>(groupMemberIds);
+//        // 移除那些在线的成员,得到离线的成员
+//        offlineMemberIds.removeAll(onlineUserIds.stream()
+//                .map(Long::parseLong).toList());
         //给在线用户发送消息
-        for (Long onlineUserId : offlineMemberIds) {
-            messagingTemplate.convertAndSendToUser(onlineUserId.toString(), "/queue/messages"+chatMsgVO.getGroupId(), chatMsgVO);
+        messagingTemplate.convertAndSend("/topic/chat/18", chatMsgVO);
+        for (String onlineUserId : onlineUserIds) {
+            log.info("onlineUserId: "+onlineUserId);
+            String dest = "/queue/messages";
+            log.info("dest: "+dest);
+            messagingTemplate.convertAndSendToUser(onlineUserId, dest, chatMsgVO);
             //TODO接收客户端ack
             deleteMessageFromInbox(chatMsgVO.getGroupId(), onlineUserId, messageJson);
         }
@@ -92,7 +102,7 @@ public class ChatMsgService {
         RedisUtils.expire(key, 1, TimeUnit.DAYS);  // 设定离线消息的生命周期（例如 1 天）
     }
 
-    private void deleteMessageFromInbox(Long groupId, Long userId, String message) {
+    public void deleteMessageFromInbox(Long groupId, String userId, String message) {
         String key = chatgroupMsgPrefix + groupId + "_" + userId;
         RedisUtils.lRemove(key,0, message);
     }

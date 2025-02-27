@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STOMP WebSocket</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<h2>打开浏览器控制台查看 WebSocket 交互</h2>
+<script>
+    const socket = new SockJS("https://localhost/ws");
+    const stompClient = Stomp.over(socket);
+
+    // 获取存储在客户端的 JWT Token
+    const jwtToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3NDA2NTMzODQsInVzZXJFbWFpbCI6InZhbGVyaWVzdXN1QDE2My5jb20iLCJleHAiOjE3NDA2Njc3ODQsInVzZXJOYW1lIjoic3VuaSIsImlhdCI6MTc0MDY1MzM4NCwidXNlcklkIjoxMTJ9.71vd-UbKqI4epw67ty8u2XiTdvv7dXpQYc2uJS52MCM';
+
+    // 使用 setHeaders 添加 Authorization 头部
+    const socketOptions = {
+        transports: ['websocket'],
+        headers: {
+            'Authorization': 'Bearer ' + jwtToken,  // 在这里添加 JWT Token
+        }
+    };
+
+    stompClient.connect(
+        socketOptions.headers,
+        // { Authorization : 'Bearer ' + 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3NDA2MjQ3OTUsInVzZXJFbWFpbCI6InZhbGVyaWVfOTVAMTYzLmNvbSIsImV4cCI6MTc0MDYzOTE5NSwidXNlck5hbWUiOiJmdXN1IiwiaWF0IjoxNzQwNjI0Nzk1LCJ1c2VySWQiOjEwM30.PaodlQc0gkQ_lCkjgHfZYcGEgA6bb9ufTavPXo01Hm4'},  // 在请求头中添加JWT
+        function(frame) {
+            console.log('Connected: ' + frame);
+            // 连接成功后可以订阅消息
+
+            // stompClient.subscribe('/103/queue/messages/18' , (message) => {
+            //     console.log("收到消息：", JSON.parse(message.body));
+            // });
+
+            stompClient.subscribe('/app/chat/18' , (message) => {
+                console.log("/app/chat/18收到消息：", JSON.parse(message.body));
+            });
+
+
+            stompClient.subscribe('/topic/chat/18' , (message) => {
+                    console.log("/topic/chat/18收到消息：", JSON.parse(message.body));
+                    message.ack();
+                },
+                {ack: 'client'}
+            );
+
+            stompClient.subscribe('/chat/18' , (message) => {
+                console.log("/chat/18收到消息：", JSON.parse(message.body));
+            });
+
+            stompClient.subscribe('/topic/18' , (message) => {
+                console.log("/topic/18收到消息：", JSON.parse(message.body));
+            });
+
+            stompClient.subscribe('/user/112/queue/messages', (message) => {
+                console.log("收到消息：", JSON.parse(message.body));
+            });
+
+            stompClient.send("/app/chat/18", {}, JSON.stringify(
+                {
+                    groupId: 18,
+                    senderId: 112,
+                    content: "Hello, world!",
+                    msgType:0,
+                    type: "CHAT",
+                    createTime: new Date()
+                }
+            ));
+        },
+        function(error) {
+            console.error('Connection failed: ', error);
+        }
+    );
+
+    // stompClient.connect({'Authorization': 'Bearer ' + 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3NDA2MjQ3OTUsInVzZXJFbWFpbCI6InZhbGVyaWVfOTVAMTYzLmNvbSIsImV4cCI6MTc0MDYzOTE5NSwidXNlck5hbWUiOiJmdXN1IiwiaWF0IjoxNzQwNjI0Nzk1LCJ1c2VySWQiOjEwM30.PaodlQc0gkQ_lCkjgHfZYcGEgA6bb9ufTavPXo01Hm4'}, () => {
+    //
+    //     console.log("WebSocket 连接成功");
+    //
+    //
+    //     stompClient.subscribe('/queue/messages' + groupId, (message) => {
+    //         console.log("收到消息：", JSON.parse(message.body));
+    //     });
+    //
+    //     stompClient.send("/app/chat/18", {}, JSON.stringify(
+    //         {
+    //             groupId: 18,
+    //             senderId: 112,
+    //             content: "Hello, world!",
+    //             msgType:0,
+    //             type: "CHAT",
+    //             createTime: new Date()
+    //         }
+    //         ));
+    // }, (error) => {
+    //     console.error("WebSocket 连接失败:", error);
+    // });
+    // // 连接到 STOMP 服务器
+    // stompClient.connect({}, function (frame) {
+    //     console.log('Connected: ' + frame);
+    //
+    //     // 订阅到用户特定的消息队列
+    //     var userId = 1;  // 假设当前用户 ID 为 1
+    //     var groupId = 101;
+    //     stompClient.subscribe('/user/' + userId + '/topic/group/' + groupId, function (message) {
+    //         // 处理接收到的消息
+    //         console.log('Received message: ' + message.body);
+    //         displayMessage(message.body);  // 将消息显示在界面上
+    //     });
+    // });
+
+    // 显示消息的函数
+    function displayMessage(message) {
+        var messageContainer = document.getElementById('messages');
+        var newMessage = document.createElement('div');
+        newMessage.innerText = message;
+        messageContainer.appendChild(newMessage);
+    }
+</script>
+</body>
+</html>

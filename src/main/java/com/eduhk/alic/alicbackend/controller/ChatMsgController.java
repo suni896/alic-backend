@@ -31,17 +31,19 @@ public class ChatMsgController {
     private SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/chat/{groupId}")
-    public void sendMessage(@DestinationVariable Long groupId, @Payload ChatMsgVO message) throws JsonProcessingException {
+    @SendTo("/topic/{groupId}")
+    public ChatMsgVO sendMessage(@DestinationVariable Long groupId, @Payload ChatMsgVO message) throws JsonProcessingException {
         log.info("groupId: "+groupId);
         log.info(message.toString());
 
         Long infoId = chatMsgService.insertChatMsg(message);
         chatMsgService.sendMessageToOnlineMember(message, infoId);
-
+        return message;
     }
 
+
     // 离线消息拉取接口，用户登录后调用
-    @RequestMapping("/getOfflineMessages")
+    @RequestMapping("/getOfflineMsg/{groupId}")
     public List<ChatMsgRespVO> getOfflineMessages(Long userId, Long groupId, int pageNum, int pageSize) {
         List<ChatMsgRespVO> offlineMessages = chatMsgService.getOfflineMessages(groupId, userId, pageNum, pageSize);
 
@@ -52,7 +54,7 @@ public class ChatMsgController {
         return offlineMessages;
     }
 
-    @RequestMapping("/getOfflineMessages")
+    @RequestMapping("/getReconnectMsg/{groupId}")
     public List<ChatMsgRespVO> getReconnectMessages(Long userId, Long groupId, Long lastMsgId) {
         List<ChatMsgRespVO> offlineMessages = chatMsgService.getReconnectOfflineMessages(groupId, userId, lastMsgId);
 

@@ -774,7 +774,7 @@ public class RedisUtils {
      * @param values
      * @return
      */
-    public Long sAdd(String key, String... values) {
+    public static Long sAdd(String key, String... values) {
         return redisTemplate.opsForSet().add(key, values);
     }
 
@@ -785,7 +785,7 @@ public class RedisUtils {
      * @param values
      * @return
      */
-    public Long sRemove(String key, Object... values) {
+    public static Long sRemove(String key, Object... values) {
         return redisTemplate.opsForSet().remove(key, values);
     }
 
