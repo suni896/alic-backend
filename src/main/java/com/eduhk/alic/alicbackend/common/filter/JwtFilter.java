@@ -53,6 +53,7 @@ public class JwtFilter implements Filter {
                 if ("JWT_TOKEN".equals(cookie.getName())) {
                     // 获取 JWT_TOKEN 的值
                     jwtToken = cookie.getValue();
+                    log.info("cookie:{}",jwtToken);
                 }
             }
         }
