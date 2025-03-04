@@ -14,7 +14,7 @@
     const stompClient = Stomp.over(socket);
 
     // 获取存储在客户端的 JWT Token
-    const jwtToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3NDA2NTMzODQsInVzZXJFbWFpbCI6InZhbGVyaWVzdXN1QDE2My5jb20iLCJleHAiOjE3NDA2Njc3ODQsInVzZXJOYW1lIjoic3VuaSIsImlhdCI6MTc0MDY1MzM4NCwidXNlcklkIjoxMTJ9.71vd-UbKqI4epw67ty8u2XiTdvv7dXpQYc2uJS52MCM';
+    const jwtToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3NDA5ODk3MjgsInVzZXJFbWFpbCI6InZhbGVyaWVzdXN1QDE2My5jb20iLCJleHAiOjE3NDEwMDQxMjgsInVzZXJOYW1lIjoic3VuaSIsImlhdCI6MTc0MDk4OTcyOCwidXNlcklkIjoxMTJ9.QxeTc0vUUpQNCMBJW3b2itraJuUZ2Ecf4QhpKN_G_Y8';
 
     // 使用 setHeaders 添加 Authorization 头部
     const socketOptions = {
@@ -31,13 +31,9 @@
             console.log('Connected: ' + frame);
             // 连接成功后可以订阅消息
 
-            // stompClient.subscribe('/103/queue/messages/18' , (message) => {
-            //     console.log("收到消息：", JSON.parse(message.body));
+            // stompClient.subscribe('/app/chat/18' , (message) => {
+            //     console.log("/app/chat/18收到消息：", JSON.parse(message.body));
             // });
-
-            stompClient.subscribe('/app/chat/18' , (message) => {
-                console.log("/app/chat/18收到消息：", JSON.parse(message.body));
-            });
 
 
             stompClient.subscribe('/topic/chat/18' , (message) => {
@@ -47,15 +43,15 @@
                 {ack: 'client'}
             );
 
-            stompClient.subscribe('/chat/18' , (message) => {
-                console.log("/chat/18收到消息：", JSON.parse(message.body));
-            });
+            // stompClient.subscribe('/chat/18' , (message) => {
+            //     console.log("/chat/18收到消息：", JSON.parse(message.body));
+            // });
+            //
+            // stompClient.subscribe('/topic/18' , (message) => {
+            //     console.log("/topic/18收到消息：", JSON.parse(message.body));
+            // });
 
-            stompClient.subscribe('/topic/18' , (message) => {
-                console.log("/topic/18收到消息：", JSON.parse(message.body));
-            });
-
-            stompClient.subscribe('/user/112/queue/messages', (message) => {
+            stompClient.subscribe('/user/112/18/chat', (message) => {
                 console.log("收到消息：", JSON.parse(message.body));
             });
 
@@ -63,7 +59,7 @@
                 {
                     groupId: 18,
                     senderId: 112,
-                    content: "Hello, world!",
+                    content: "Hello, world2!",
                     msgType:0,
                     type: "CHAT",
                     createTime: new Date()
@@ -87,7 +83,7 @@
     //     stompClient.send("/app/chat/18", {}, JSON.stringify(
     //         {
     //             groupId: 18,
-    //             senderId: 112,
+    //             senderId: 103,
     //             content: "Hello, world!",
     //             msgType:0,
     //             type: "CHAT",

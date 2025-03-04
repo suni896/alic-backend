@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STOMP WebSocket</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<h2>WebSocket 测试</h2>
+<button onclick="sendMessage()">发送消息</button>
+<div id="messages"></div>
+
+<script>
+    let stompClient = null;
+    const jwtToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3NDEwNTk1MjksInVzZXJFbWFpbCI6InZhbGVyaWVzdXN1QDE2My5jb20iLCJleHAiOjE3NDEwNzM5MjksInVzZXJOYW1lIjoic3VuaSIsImlhdCI6MTc0MTA1OTUyOSwidXNlcklkIjoxMTJ9.-0sxY7vA7R7yP4P5XLy4LMLW6SmhlKR_yhRtWKILwMA'; // 替换为实际 JWT
+    const userId = "112";
+    const groupId = "18";
+    let lastMsgId = localStorage.getItem("lastMsgId") || 0;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+
+    function connect() {
+        console.log("连接到 WebSocket...");
+        const socket = new SockJS("https://localhost/ws");
+        stompClient = Stomp.over(socket);
+        stompClient.connect(
+            { Authorization: 'Bearer ' + jwtToken },
+            function (frame) {
+                console.log("已连接: ", frame);
+                reconnectAttempts = 0; // 重置重连计数
+
+                // 订阅频道
+                stompClient.subscribe(`/topic/chat/${groupId}`, (message) => {
+                    const data = JSON.parse(message.body);
+                    console.log("收到群消息：", data);
+                    displayMessage(data);
+                    lastMsgId = data.msgId;
+                    localStorage.setItem("lastMsgId", lastMsgId);
+                });
+
+                stompClient.subscribe(`/user/${userId}/${groupId}/reconnect/chat`, (message) => {
+                    const data = JSON.parse(message.body);
+                    console.log("收到断线重连消息：", data);
+                    displayMessage(data);
+                });
+
+                // 拉取离线消息
+                fetchOfflineMessages();
+            },
+            function (error) {
+                console.error("连接失败: ", error);
+                attemptReconnect();
+            }
+        );
+    }
+
+    function fetchOfflineMessages() {
+        console.log("拉取离线消息...");
+        stompClient.send(`/app/getOfflineMsg/${groupId}`, {}, JSON.stringify({
+            userId: userId,
+            pageNum: 1,
+            pageSize: 20
+        }));
+    }
+
+    function attemptReconnect() {
+        if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            console.log(`尝试重连 (${reconnectAttempts}/${maxReconnectAttempts})...`);
+            setTimeout(connect, 3000);
+        } else {
+            console.error("重连失败，放弃尝试。");
+        }
+    }
+
+    function sendMessage() {
+        const message = {
+            groupId: groupId,
+            senderId: userId,
+            content: "Hello, world!",
+            msgType: 0,
+            type: "CHAT",
+            createTime: new Date()
+        };
+        stompClient.send(`/app/chat/${groupId}`, {}, JSON.stringify(message));
+        console.log("发送消息: ", message);
+    }
+
+    function displayMessage(message) {
+        const messageContainer = document.getElementById('messages');
+        const newMessage = document.createElement('div');
+        newMessage.innerText = JSON.stringify(message);
+        messageContainer.appendChild(newMessage);
+    }
+
+    connect(); // 初始化 WebSocket 连接
+</script>
+</body>
+</html>

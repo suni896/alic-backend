@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static com.eduhk.alic.alicbackend.common.constant.StompConstant.SUB_USER;
+
 /**
  * @author FuSu
  * @date 2025/2/20 15:25
@@ -86,10 +88,7 @@ public class ChatMsgService {
         //给在线用户发送消息
         messagingTemplate.convertAndSend("/topic/chat/18", chatMsgVO);
         for (String onlineUserId : onlineUserIds) {
-            log.info("onlineUserId: "+onlineUserId);
-            String dest = "/queue/messages";
-            log.info("dest: "+dest);
-            messagingTemplate.convertAndSendToUser(onlineUserId, dest, chatMsgVO);
+            messagingTemplate.convertAndSendToUser(onlineUserId, "/"+chatMsgVO.getGroupId()+SUB_USER.getPath(), chatMsgVO);
             //TODO接收客户端ack
             deleteMessageFromInbox(chatMsgVO.getGroupId(), onlineUserId, messageJson);
         }
@@ -123,6 +122,7 @@ public class ChatMsgService {
                 respVO.setSenderId(msg.getMsgSource());
                 respVO.setContent(msg.getMsgContent());
                 respVO.setCreateTime(msg.getCreateTime());
+                respVO.setInfoId(msg.getId());
                 return respVO;
             }).toList();
         } else {
@@ -147,6 +147,7 @@ public class ChatMsgService {
             respVO.setSenderId(msg.getMsgSource());
             respVO.setContent(msg.getMsgContent());
             respVO.setCreateTime(msg.getCreateTime());
+            respVO.setInfoId(msg.getId());
             return respVO;
         }).toList();
     }

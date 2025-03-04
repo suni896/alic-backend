@@ -11,6 +11,8 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import static com.eduhk.alic.alicbackend.common.constant.StompConstant.*;
+
 /**
  * @author FuSu
  * @date 2025/2/18 13:30
@@ -21,7 +23,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
+        registry.addEndpoint(STOMP_ENDPOINT.getPath())
                 .setAllowedOriginPatterns("*")
 //                .addInterceptors(new AuthHandshakeInterceptor())
                 .withSockJS();
@@ -29,9 +31,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic", "/queue");  // 订阅前缀
-        registry.setApplicationDestinationPrefixes("/app");  // 发送消息前缀
-        registry.setUserDestinationPrefix("/user");
+        registry.enableSimpleBroker(STOMP_TOPIC.getPath(), STOMP_USER.getPath()); // 订阅前缀
+        registry.setApplicationDestinationPrefixes(STOMP_APP.getPath());  // 发送消息前缀
+        registry.setUserDestinationPrefix(STOMP_USER.getPath());
     }
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {

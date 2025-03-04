@@ -14,7 +14,7 @@
     const stompClient = Stomp.over(socket);
 
     // 获取存储在客户端的 JWT Token
-    const jwtToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3NDA2NTE0MjMsInVzZXJFbWFpbCI6InZhbGVyaWVfOTVAMTYzLmNvbSIsImV4cCI6MTc0MDY2NTgyMywidXNlck5hbWUiOiJmdXN1IiwiaWF0IjoxNzQwNjUxNDIzLCJ1c2VySWQiOjEwM30.MfxZGS8JF0qXHn6hR3YdLrQKzo3WeB9H6dVelOirMvY';
+    const jwtToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3NDA5OTQ2OTksInVzZXJFbWFpbCI6InZhbGVyaWVfOTVAMTYzLmNvbSIsImV4cCI6MTc0MTAwOTA5OSwidXNlck5hbWUiOiJmdXN1IiwiaWF0IjoxNzQwOTk0Njk5LCJ1c2VySWQiOjEwM30.kcll1rWlFCcf4EyxvqwyX9UjDPpRcWmnOQnQJiStQbw';
 
     // 使用 setHeaders 添加 Authorization 头部
     const socketOptions = {
@@ -29,46 +29,66 @@
         // { Authorization : 'Bearer ' + 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3NDA2MjQ3OTUsInVzZXJFbWFpbCI6InZhbGVyaWVfOTVAMTYzLmNvbSIsImV4cCI6MTc0MDYzOTE5NSwidXNlck5hbWUiOiJmdXN1IiwiaWF0IjoxNzQwNjI0Nzk1LCJ1c2VySWQiOjEwM30.PaodlQc0gkQ_lCkjgHfZYcGEgA6bb9ufTavPXo01Hm4'},  // 在请求头中添加JWT
         function(frame) {
             console.log('Connected: ' + frame);
-            // 连接成功后可以订阅消息
+            //todo拉取离线消息
+            stompClient.send("/app/getOfflineMsg/18", {}, JSON.stringify(
+                {
+                    userId: "103",
+                    pageNum: 1,
+                    pageSize: 20
+                }
+            ));
 
-            // stompClient.subscribe('/103/queue/messages/18' , (message) => {
-            //     console.log("收到消息：", JSON.parse(message.body));
+            stompClient.send("/app/getReconnectMsg/18", {}, JSON.stringify(
+                {
+                    userId: "103",
+                    lastMsgId: 35,
+                }
+            ));
+
+
+            // stompClient.subscribe('/app/chat/18' , (message) => {
+            //     console.log("/app/chat/18收到消息：", JSON.parse(message.body));
             // });
-
-            stompClient.subscribe('/app/chat/18' , (message) => {
-                console.log("/app/chat/18收到消息：", JSON.parse(message.body));
-            });
 
 
             stompClient.subscribe('/topic/chat/18' , (message) => {
-                    console.log("/topic/chat/18收到消息：", JSON.parse(message.body));
+                    console.log("收到群组消息：", JSON.parse(message.body));
                     message.ack();
                 },
                 {ack: 'client'}
             );
 
-            stompClient.subscribe('/chat/18' , (message) => {
-                console.log("/chat/18收到消息：", JSON.parse(message.body));
+            // stompClient.subscribe('/chat/18' , (message) => {
+            //     console.log("/chat/18收到消息：", JSON.parse(message.body));
+            // });
+            //
+            // stompClient.subscribe('/topic/18' , (message) => {
+            //     console.log("/topic/18收到消息：", JSON.parse(message.body));
+            // });
+
+            stompClient.subscribe('/user/103/18/chat', (message) => {
+                console.log("收到单人消息：", JSON.parse(message.body));
             });
 
-            stompClient.subscribe('/topic/18' , (message) => {
-                console.log("/topic/18收到消息：", JSON.parse(message.body));
+            stompClient.subscribe('/user/103/18/reconnect/chat', (message) => {
+                console.log("收到断线消息：", JSON.parse(message.body));
             });
 
-            stompClient.subscribe('/user/103/queue/messages', (message) => {
-                console.log("收到消息：", JSON.parse(message.body));
+            stompClient.subscribe('/user/103/18/offline/chat', (message) => {
+                console.log("收到断线消息：", JSON.parse(message.body));
             });
 
-            stompClient.send("/app/chat/18", {}, JSON.stringify(
-                {
-                    groupId: 18,
-                    senderId: 103,
-                    content: "Hello, world!",
-                    msgType:0,
-                    type: "CHAT",
-                    createTime: new Date()
-                }
-            ));
+            //todo发送群组消息
+            // stompClient.send("/app/chat/18", {}, JSON.stringify(
+            //     {
+            //         groupId: 18,
+            //         senderId: 103,
+            //         content: "Hello, world!",
+            //         msgType:0,
+            //         type: "CHAT",
+            //         createTime: new Date()
+            //     }
+            // ));
         },
         function(error) {
             console.error('Connection failed: ', error);

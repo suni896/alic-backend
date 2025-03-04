@@ -37,7 +37,7 @@ public interface ChatMsgMapper extends BaseMapper<ChatMsgEntity> {
     @Select("SELECT * FROM `chat_msg` WHERE `msg_dest` = #{groupID} AND `create_time` > #{retriveTime} ORDER BY `create_time` ASC")
     List<ChatMsgEntity> getOfflineMessagesForUser(@Param("groupID") Long groupID, @Param("retriveTime")Date retriveTime);
 
-    @Select("SELECT * FROM `chat_msg` WHERE `msg_dest` = #{groupID} orderBy `id` DESC")
+    @Select("SELECT * FROM `chat_msg` WHERE `msg_dest` = #{groupID} ORDER BY `id` DESC")
     Page<ChatMsgEntity> getChatMsgByPage(@Param("groupID") Long groupID, IPage<ChatMsgEntity> page);
 
     @Select("SELECT * FROM chat_msg WHERE `msg_dest` = #{groupID} AND id > #{id} orderBy `id` ASC")

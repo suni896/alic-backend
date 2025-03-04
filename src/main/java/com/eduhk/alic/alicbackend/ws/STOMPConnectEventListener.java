@@ -23,7 +23,7 @@ public class STOMPConnectEventListener implements ApplicationListener<AbstractSu
     @Override
     public void onApplicationEvent(AbstractSubProtocolEvent event) {
         StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-
+        String userId = event.getUser().getName();
         // 判断客户端的连接状态
         switch (sha.getCommand()) {
             case CONNECT:
@@ -31,17 +31,22 @@ public class STOMPConnectEventListener implements ApplicationListener<AbstractSu
                 break;
             case DISCONNECT:
                 log.info("下线");
+                if (userId != null) {
+                    RedisUtils.setMembers(userChatGroupConnectPrefix + userId).forEach(
+                            groupId ->{
+                                RedisUtils.sRemove(chatgroupConnectPrefix + groupId, userId);
+                                RedisUtils.sRemove(userChatGroupConnectPrefix + userId, groupId);
+                                }
+                            );
+                }
                 break;
             case SUBSCRIBE:
                 log.info("订阅");
                 log.info("订阅的频道："+sha.getDestination());
                 log.info(event.getUser().getName());
                 // 订阅的频道
-                String dest = sha.getDestination();
-                String[] split = dest.split("/");
-                String groupId = split[split.length - 1];
+                String groupId = getGroupIdFromPath(sha.getDestination());
                 // 订阅的用户
-                String userId = event.getUser().getName();
                 if (userId != null) {
                     log.info("User subscribed to group " + groupId + ": " + userId);
 
@@ -59,6 +64,19 @@ public class STOMPConnectEventListener implements ApplicationListener<AbstractSu
 //                break;
             case UNSUBSCRIBE:
                 log.info("取消订阅");
+                String groupId2 = getGroupIdFromPath(sha.getDestination());
+                // 订阅的用户
+                if (userId != null) {
+                    log.info("User unsubscribed to group " + groupId2 + ": " + userId);
+
+                    // 构造聊天室加入消息
+                    ChatMsgVO chatMessage = new ChatMsgVO();
+                    chatMessage.setType(MessageTypeEnum.JOIN);
+
+                    // 将用户添加到 Redis 的在线用户集合中
+                    RedisUtils.sRemove(chatgroupConnectPrefix + groupId2, userId);
+                    RedisUtils.sRemove(userChatGroupConnectPrefix + userId, groupId2);
+                }
                 break;
 //            case ACK:
 //                log.info("确认");
@@ -67,5 +85,16 @@ public class STOMPConnectEventListener implements ApplicationListener<AbstractSu
             default:
                 break;
         }
+    }
+
+    private String getGroupIdFromPath(String path) {
+        String[] split = path.split("/");
+        if (path.contains("topic")) {
+            return split[split.length - 1];
+        }else if (path.contains("user")){
+            return split[split.length - 2];
+        }
+        return null;
+
     }
 }
