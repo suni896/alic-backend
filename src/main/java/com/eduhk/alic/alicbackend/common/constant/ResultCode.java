@@ -17,6 +17,7 @@ public enum ResultCode {
     INTERNAL_SERVER_ERROR(500, "Server Error"),//服务器内部错误
     CODE_SEND_ERROR(501, "Send Code Failed, Please Contact Platform Admin"),
     METHOD_NOT_ALLOWED(405,"方法不被允许"),
+    ASSISTANT_CREATE_FAILED(406, "AI Assistant Create Failed"),
 
     /*参数错误:1001-1999*/
     PARAMS_IS_INVALID(1001, "params is invalid"),
@@ -30,6 +31,7 @@ public enum ResultCode {
     USER_ALREADY_IN_GROUP(1009,"user already in group"),
     GROUP_NOT_PRIVATE(1010,"group is not private"),
     GROUP_MEMBER_LIMIT(1011,"group member limit exceeded"),
+    BOT_NAME_DUPLICATE(1012,"bot name duplicate"),
 
     /*用户错误2001-2999*/
     UNREGISTERED_ACCOUNT(2001, "the account is unregistered, please register first"),

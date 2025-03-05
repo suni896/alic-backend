@@ -18,6 +18,8 @@ public class ChatBotInfoEntity {
     private String botPrompt;       // Bot prompt
     private Integer botContext;     // Bot context
     private Integer accessType;     // Access type (0: admin only, 1: all group members)
+    private String agentId;
+    private Long botCondition;
 //    private TimeEntity accessTime;
     @TableField(value = "create_time",fill = FieldFill.INSERT)
     private Date createTime;

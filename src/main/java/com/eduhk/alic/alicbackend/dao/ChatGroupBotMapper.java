@@ -13,32 +13,35 @@ import java.util.List;
 @Mapper
 public interface ChatGroupBotMapper extends BaseMapper<ChatBotInfoEntity> {
 
-    @Insert("INSERT INTO chat_group_bot (group_id, bot_name, bot_prompt, bot_context, access_type, create_time, update_time, delete_time) " +
-            "VALUES (#{groupId}, #{botName}, #{botPrompt}, #{botContext}, #{accessType}, #{createTime}, #{updateTime}, #{deleteTime})")
+    @Insert("INSERT INTO chat_group_bot (group_id, bot_name, bot_prompt, bot_context, access_type, create_time, update_time, delete_time, agent_id, bot_condition) " +
+            "VALUES (#{groupId}, #{botName}, #{botPrompt}, #{botContext}, #{accessType}, #{createTime}, #{updateTime}, #{deleteTime}, #{agentId}, 0)")
     @Options(useGeneratedKeys = true, keyProperty = "botId")
     int insert(ChatBotInfoEntity chatGroupBot);
 
     @Insert({
             "<script>",
-            "INSERT INTO chat_group_bot (group_id, bot_name, bot_prompt, bot_context, access_type, create_time, update_time, delete_time) VALUES ",
+            "INSERT INTO chat_group_bot (group_id, bot_name, bot_prompt, bot_context, access_type, create_time, update_time, delete_time, agent_id, bot_condition) VALUES ",
             "<foreach collection='chatGroupBots' item='bot' separator=','>",
-            "(#{bot.groupId}, #{bot.botName}, #{bot.botPrompt}, #{bot.botContext}, #{bot.accessType}, #{bot.createTime}, #{bot.updateTime}, #{bot.deleteTime})",
+            "(#{bot.groupId}, #{bot.botName}, #{bot.botPrompt}, #{bot.botContext}, #{bot.accessType}, #{bot.createTime}, #{bot.updateTime}, #{bot.deleteTime}, #{bot.agentId}, #{bot.botCondition})",
             "</foreach>",
             "</script>"
     })
     @Options(useGeneratedKeys = true, keyProperty = "botId")
     int insertBatch(@Param("chatGroupBots") List<ChatBotInfoEntity> chatGroupBots);
 
+    @Update("UPDATE chat_group_bot SET agent_id = #{assistantId}, bot_condition = 1 WHERE bot_id = #{botId}")
+    void updateAgentId(@Param("botId") Long botId, @Param("assistantId") String assistantId);
+
     @Select("SELECT * FROM chat_group_bot WHERE bot_id = #{botId}")
     ChatBotInfoEntity selectById(@Param("botId") Long botId);
 
-    @Select("SELECT * FROM chat_group_bot WHERE group_id = #{groupId}")
+    @Select("SELECT * FROM chat_group_bot WHERE group_id = #{groupId} AND bot_condition = 1")
     List<ChatBotInfoEntity> selectByGroupId(@Param("groupId") Long groupId);
 
-    @Select("SELECT bot_id FROM chat_group_bot WHERE group_id = #{groupId}")
+    @Select("SELECT bot_id FROM chat_group_bot WHERE group_id = #{groupId} AND bot_condition = 1")
     List<Long> selectBotLdByGroupId(@Param("groupId") Long groupId);
 
-    @Select("SELECT * FROM chat_group_bot WHERE group_id = #{groupId} and access_type = 1")
+    @Select("SELECT * FROM chat_group_bot WHERE group_id = #{groupId} and access_type = 1 AND bot_condition = 1")
     List<ChatBotInfoEntity> selectByGroupIdMember(@Param("groupId") Long groupId);
 
 
@@ -50,8 +53,22 @@ public interface ChatGroupBotMapper extends BaseMapper<ChatBotInfoEntity> {
     @Delete("DELETE FROM chat_group_bot WHERE bot_id = #{botId}")
     int deleteById(@Param("botId") Long botId);
 
-    @Delete("<script>" +
-            "DELETE FROM chat_group_bot " +
+    @Update("<script>" +
+            "UPDATE chat_group_bot " +
+            "SET bot_condition = bot_id " +
+            "<where>" +
+            "    <if test='botIds != null and botIds.size() > 0'>" +
+            "        AND bot_id IN " +
+            "        <foreach item='botId' collection='botIds' open='(' separator=',' close=')'>" +
+            "            #{botId}" +
+            "        </foreach>" +
+            "    </if>" +
+            "</where>" +
+            "</script>")
+    void batchUpdateBotCondition(@Param("botIds") List<Long> botIds);
+
+    @Select("<script>" +
+            "SELECT agent_id FROM chat_group_bot " +
             "<where>" +
             "    <if test='botIds != null and botIds.size() > 0'>" +
             "        bot_id IN " +
@@ -61,7 +78,7 @@ public interface ChatGroupBotMapper extends BaseMapper<ChatBotInfoEntity> {
             "    </if>" +
             "</where>" +
             "</script>")
-    void batchDeleteByIds(@Param("botIds") List<Long> botIds);
+    List<String> batchQueryAgentIdByIds(@Param("botIds") List<Long> botIds);
 
     @Update("<script>" +
             "<foreach item='bot' index='index' collection='bots' open='' separator=';' close=''>" +
@@ -69,4 +86,15 @@ public interface ChatGroupBotMapper extends BaseMapper<ChatBotInfoEntity> {
             "</foreach>" +
             "</script>")
     void batchUpdateByIds(List<ChatBotInfoEntity> bots);
+
+    @Select("""
+        <script>
+            SELECT COUNT(*) FROM chat_group_bot
+            WHERE 
+            <foreach collection="botInfos" item="bot" separator=" OR ">
+                (group_id = #{bot.groupId} AND bot_name = #{bot.botName} AND bot_condition = 1)
+            </foreach>
+        </script>
+        """)
+    Long batchQueryByGroupIdAndBotNameAndCondition(@Param("botInfos") List<ChatBotInfoEntity> botInfos);
 }
