@@ -116,34 +116,42 @@ public class GroupSearchService {
 
     public PageVO<GroupSearchInfoVO> searchAllGroup(String keyword, Integer pageNum, Integer pageSize) {
         IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
-        // TODO: groupid搜索
-        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getAllGroups(keyword, page);
+
+        // 判断 keyword 是否是数字
+        boolean isNumeric = keyword != null && keyword.matches("\\d+");
+
+        // 调用 MyBatis 查询
+        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getAllGroups(keyword, isNumeric, page);
         List<GroupSearchInfoVO> groupSearchInfoVOS = convertToGroupSearchInfoVOList(groupInfoEntities.getRecords());
         return createPageVO(groupInfoEntities, groupSearchInfoVOS, pageNum, pageSize);
     }
 
     public PageVO<GroupSearchInfoVO> searchPublicGroup(String keyword, Integer pageNum, Integer pageSize) {
         IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
-        // TODO: groupid搜索
-        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getPublicGroups(keyword, page);
+        // 判断 keyword 是否是数字
+        boolean isNumeric = keyword != null && keyword.matches("\\d+");
+        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getPublicGroups(keyword, isNumeric, page);
         List<GroupSearchInfoVO> groupSearchInfoVOS = convertToGroupSearchInfoVOList(groupInfoEntities.getRecords());
         return createPageVO(groupInfoEntities, groupSearchInfoVOS, pageNum, pageSize);
     }
 
     public PageVO<GroupSearchInfoVO> searchJoinGroup(Long userId, String keyword, Integer pageNum, Integer pageSize) {
         IPage<GroupDetailInfoEntity> page = new Page<>(pageNum, pageSize);
-        // TODO: groupid搜索
-        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getJoinGroups(userId, keyword, page);
+        // 判断 keyword 是否是数字
+        boolean isNumeric = keyword != null && keyword.matches("\\d+");
+
+        Page<GroupDetailInfoEntity> groupInfoEntities = groupInfoMapper.getJoinGroups(userId, keyword, isNumeric, page);
         List<GroupSearchInfoVO> groupSearchInfoVOS = convertToGroupSearchInfoVOList(groupInfoEntities.getRecords());
         return createPageVO(groupInfoEntities, groupSearchInfoVOS, pageNum, pageSize);
     }
 
     public List<TagGroupBindVO> searchGroupForTag(Long userId, Long tagId, String keyword) {
-        List<GroupTagEntity> joinedGroup = groupInfoMapper.getJoinGroupsForTag(userId, keyword);
+        boolean isNumeric = keyword != null && keyword.matches("\\d+");
+        List<GroupTagEntity> joinedGroup = groupInfoMapper.getJoinGroupsForTag(userId, keyword, isNumeric);
         if (joinedGroup.isEmpty()) {
             return Collections.emptyList();
         }
-        List<GroupTagEntity> groupBindedTag = groupInfoMapper.getGroupsBindedTag(tagId, keyword);
+        List<GroupTagEntity> groupBindedTag = groupInfoMapper.getGroupsBindedTag(tagId, keyword, isNumeric);
         if (groupBindedTag.isEmpty()) {
             return joinedGroup.stream()
                     .map(group -> new TagGroupBindVO(group.getGroupId(), group.getGroupName(), false))
