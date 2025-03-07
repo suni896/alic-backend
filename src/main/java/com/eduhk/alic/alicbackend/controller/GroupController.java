@@ -29,8 +29,6 @@ public class GroupController {
     GroupManageService groupManageService;
     @Resource
     GroupUserService groupUserService;
-    @Resource
-    ChatBotService chatBotService;
 
     @Resource
     private final GroupSearchStrategyFactory strategyFactory;
@@ -46,7 +44,9 @@ public class GroupController {
     public Result createGroup(@Validated @RequestBody GroupInfoVO groupInfoVO, @RequestAttribute("userId") Long userId) {
         Long newGroupId = groupManageService.createGroup(groupInfoVO, userId);
         groupUserService.addUserToGroup(newGroupId, userId);
-        chatBotService.createGroupBot(groupInfoVO.getChatBotVOList(), newGroupId);
+        if (groupInfoVO.getChatBotVOList() != null && !groupInfoVO.getChatBotVOList().isEmpty()) {
+            groupManageService.createGroupBot(groupInfoVO.getChatBotVOList(), newGroupId);
+        }
         JSONObject jsonObject = new JSONObject();
         jsonObject.set("groupId",newGroupId);
         return ResultResp.success(jsonObject);

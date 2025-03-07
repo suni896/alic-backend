@@ -50,6 +50,17 @@ public interface ChatGroupBotMapper extends BaseMapper<ChatBotInfoEntity> {
             "WHERE bot_id = #{botId}")
     int update(ChatBotInfoEntity chatGroupBot);
 
+    @Update("<script>" +
+            "UPDATE chat_group_bot " +
+            "SET bot_prompt = #{botPrompt}, " +
+            "bot_context = #{botContext}, " +
+            "access_type = #{accessType}, " +
+            "update_time = #{updateTime} " +
+            "<if test='botCondition != null'>, bot_condition = #{botCondition}</if> " +
+            "WHERE bot_id = #{botId}" +
+            "</script>")
+    int updateByBotId(ChatBotInfoEntity chatGroupBot);
+
     @Delete("DELETE FROM chat_group_bot WHERE bot_id = #{botId}")
     int deleteById(@Param("botId") Long botId);
 
@@ -97,4 +108,11 @@ public interface ChatGroupBotMapper extends BaseMapper<ChatBotInfoEntity> {
         </script>
         """)
     Long batchQueryByGroupIdAndBotNameAndCondition(@Param("botInfos") List<ChatBotInfoEntity> botInfos);
+
+    @Select("SELECT * FROM chat_group_bot WHERE bot_condition = #{botCondition}")
+    List<ChatBotInfoEntity> selectByStatus(@Param("botCondition") Long botCondition);
+
+    @Update("UPDATE chat_group_bot SET bot_condition = #{botCondition} WHERE bot_id = #{botId}")
+    void updateBotStatus(@Param("botId") Long botId, @Param("botCondition") Long botCondition);
+
 }

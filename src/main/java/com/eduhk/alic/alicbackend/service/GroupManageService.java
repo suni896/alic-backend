@@ -12,6 +12,8 @@ import com.eduhk.alic.alicbackend.utils.AvatarUtils;
 import com.eduhk.alic.alicbackend.utils.Md5Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +33,6 @@ public class GroupManageService {
     private ChatGroupBotMapper chatGroupBotMapper;
     @Resource
     private UserInfoMapper userInfoMapper;
-    @Resource
-    ChatBotService chatBotService;
 
     public long createGroup(GroupInfoVO groupInfoVO, Long userId) {
         GroupInfoEntity groupInfoEntity = new GroupInfoEntity();
@@ -55,28 +55,6 @@ public class GroupManageService {
         return groupInfoEntity.getGroupId();
 
     }
-
-//    @Async
-//    public void createGroupBot(List<ChatBotVO> chatBotVOList, long groupId) {
-//        List<ChatBotInfoEntity> chatBotInfoEntities = chatBotVOList.stream()
-//                .map(vo -> {
-//                    ChatBotInfoEntity entity = new ChatBotInfoEntity();
-//                    entity.setBotName(vo.getBotName());
-//                    entity.setBotPrompt(vo.getBotPrompt());
-//                    entity.setBotContext(vo.getBotContext());
-//                    entity.setAccessType(vo.getAccessType());
-//                    entity.setGroupId(groupId);
-//                    //TODO 改异步？
-//                    String assistantId = botManagementService.createAssistant(vo.getBotPrompt()).block();
-//                    entity.setAgentId(assistantId);
-//                    log.info("assistant id："+ assistantId);
-//
-//                    return entity;
-//                })
-//                .collect(Collectors.toList());
-//        chatGroupBotMapper.insertBatch(chatBotInfoEntities);
-//    }
-
 
     public List<ChatBotInvokeVO> getGroupChatBotList(long groupId, GroupMemberType type) {
         List<ChatBotInfoEntity> chatBotInfoEntities = new ArrayList<>();
@@ -133,31 +111,84 @@ public class GroupManageService {
         return groupDemonVO;
     }
 
+    public void createGroupBot(List<ChatBotVO> chatBotVOList, long groupId) {
+        log.info("开始创建 Group Bot，Group ID: {}", groupId);
+
+        List<ChatBotInfoEntity> chatBotInfoEntities = chatBotVOList.stream()
+                .map(vo -> {
+                    ChatBotInfoEntity entity = new ChatBotInfoEntity();
+                    entity.setBotName(vo.getBotName());
+                    entity.setBotPrompt(vo.getBotPrompt());
+                    entity.setBotContext(vo.getBotContext());
+                    entity.setAccessType(vo.getAccessType());
+                    entity.setGroupId(groupId);
+                    entity.setBotCondition(0L);
+                    return entity;
+                })
+                .toList();
+        Long duplicateBotNum = chatGroupBotMapper.batchQueryByGroupIdAndBotNameAndCondition(chatBotInfoEntities);
+        if (duplicateBotNum > 0) {
+            throw new BaseException(ResultCode.BOT_NAME_DUPLICATE);
+        }
+        chatGroupBotMapper.insertBatch(chatBotInfoEntities);
+        log.info("数据库插入成功，Group ID: {}", groupId);
+
+    }
+
+    @Transactional
     public void modifyGroupInfo(GroupModifyInfoVO groupModifyInfoVO) {
         GroupInfoEntity groupInfoEntity = groupInfoMapper.selectById(groupModifyInfoVO.getGroupId());
         //group是否存在
         if (groupInfoEntity == null) {
             throw new BaseException(ResultCode.GROUP_NOT_EXIST);
         }
-
         List<Long> oldBotLdList = chatGroupBotMapper.selectBotLdByGroupId(groupModifyInfoVO.getGroupId());
         List<Long> modifyBotLdList = groupModifyInfoVO.getModifyChatBotVOS().stream().map(ChatBotDemonVO::getBotId).toList();
-        System.out.println(modifyBotLdList.get(0));
         //3. 新增的bot,insert
         List<ChatBotVO> newChatBotInfoVOS = groupModifyInfoVO.getAddChatBotVOList();
         if (newChatBotInfoVOS != null && !newChatBotInfoVOS.isEmpty()) {
-            chatBotService.createGroupBot(newChatBotInfoVOS, groupModifyInfoVO.getGroupId());
-        }
+            log.info("开始创建 Group Bot，Group ID: {}", groupModifyInfoVO.getGroupId());
 
+            List<ChatBotInfoEntity> chatBotInfoEntities = newChatBotInfoVOS.stream()
+                    .map(vo -> {
+                        ChatBotInfoEntity entity = new ChatBotInfoEntity();
+                        entity.setBotName(vo.getBotName());
+                        entity.setBotPrompt(vo.getBotPrompt());
+                        entity.setBotContext(vo.getBotContext());
+                        entity.setAccessType(vo.getAccessType());
+                        entity.setGroupId(groupModifyInfoVO.getGroupId());
+                        entity.setBotCondition(0L);
+                        return entity;
+                    })
+                    .toList();
+            Long duplicateBotNum = chatGroupBotMapper.batchQueryByGroupIdAndBotNameAndCondition(chatBotInfoEntities);
+            if (duplicateBotNum > 0) {
+                throw new BaseException(ResultCode.BOT_NAME_DUPLICATE);
+            }
+            chatGroupBotMapper.insertBatch(chatBotInfoEntities);
+            log.info("数据库插入成功，Group ID: {}", groupModifyInfoVO.getGroupId());
+        }
         // 1. 找出相同元素,update
         // bot context accesstype prompt 有改动的才update
-        for (ChatBotDemonVO chatBotModifyVO : groupModifyInfoVO.getModifyChatBotVOS()) {
-            ChatBotInfoEntity chatBotInfoEntity = chatGroupBotMapper.selectById(chatBotModifyVO.getBotId());
-            if (!Objects.equals(chatBotInfoEntity.getBotContext(), chatBotModifyVO.getBotContext()) ||
-                    !Objects.equals(chatBotInfoEntity.getAccessType(), chatBotModifyVO.getAccessType()) ||
-                    !Objects.equals(chatBotInfoEntity.getBotPrompt(), chatBotModifyVO.getBotPrompt())) {
+        if (groupModifyInfoVO.getModifyChatBotVOS() != null && !groupModifyInfoVO.getModifyChatBotVOS().isEmpty()) {
+            for (ChatBotDemonVO chatBotModifyVO : groupModifyInfoVO.getModifyChatBotVOS()) {
+                ChatBotInfoEntity chatBotInfoEntity = chatGroupBotMapper.selectById(chatBotModifyVO.getBotId());
+                if (!Objects.equals(chatBotInfoEntity.getBotContext(), chatBotModifyVO.getBotContext()) ||
+                        !Objects.equals(chatBotInfoEntity.getAccessType(), chatBotModifyVO.getAccessType()) ||
+                        !Objects.equals(chatBotInfoEntity.getBotPrompt(), chatBotModifyVO.getBotPrompt())) {
 
-               chatBotService.modifyGroupBot(chatBotModifyVO, chatBotInfoEntity);
+//                    chatBotService.modifyGroupBot(chatBotModifyVO, chatBotInfoEntity);
+                    ChatBotInfoEntity modifyChatBotInfoEntity = new ChatBotInfoEntity();
+                    modifyChatBotInfoEntity.setBotId(chatBotModifyVO.getBotId());
+                    modifyChatBotInfoEntity.setAccessType(chatBotModifyVO.getAccessType());
+                    modifyChatBotInfoEntity.setBotContext(chatBotModifyVO.getBotContext());
+                    modifyChatBotInfoEntity.setBotPrompt(chatBotModifyVO.getBotPrompt());
+                    if (!Objects.equals(chatBotInfoEntity.getBotPrompt(), chatBotModifyVO.getBotPrompt())) {
+                        log.info("修改prompt:"+chatBotModifyVO.getBotPrompt());
+                        modifyChatBotInfoEntity.setBotCondition(2L);
+                    }
+                    chatGroupBotMapper.updateByBotId(modifyChatBotInfoEntity);
+                }
             }
         }
 
@@ -184,26 +215,25 @@ public class GroupManageService {
 //            }
 
             chatGroupBotMapper.batchUpdateBotCondition(deleteBotList);
-            //4.修改群组信息：description password
-            //group信息只有description和password可以修改
-            //group信息在展示的时候，password返回给前端加salt之后的值，在这里判断的时候如果password没修改则与数据库中salt之后的值一致，否则就是被改过了。
-            if (!Objects.equals(groupModifyInfoVO.getGroupDescription(), groupInfoEntity.getGroupDescription()) ||
-                    !Objects.equals(groupModifyInfoVO.getPassword(), groupInfoEntity.getPassword())) {
-
-                // 更新群组描述
-                groupInfoEntity.setGroupDescription(groupModifyInfoVO.getGroupDescription());
-
-                // 处理密码更新
-                String newPassword = groupModifyInfoVO.getPassword();
-                if (!Objects.equals(newPassword, groupInfoEntity.getPassword())) {
-                    groupInfoEntity.setPassword(Md5Utils.addSalt(newPassword, groupInfoEntity.getSalt()).getPassword());
-                }
-
-                // 更新数据库
-                groupInfoMapper.update(groupInfoEntity);
-            }
         }
+        //4.修改群组信息：description password
+        //group信息只有description和password可以修改
+        //group信息在展示的时候，password返回给前端加salt之后的值，在这里判断的时候如果password没修改则与数据库中salt之后的值一致，否则就是被改过了。
+        if (!Objects.equals(groupModifyInfoVO.getGroupDescription(), groupInfoEntity.getGroupDescription()) ||
+                !Objects.equals(groupModifyInfoVO.getPassword(), groupInfoEntity.getPassword())) {
 
+            // 更新群组描述
+            groupInfoEntity.setGroupDescription(groupModifyInfoVO.getGroupDescription());
+
+            // 处理密码更新
+            String newPassword = groupModifyInfoVO.getPassword();
+            if (!Objects.equals(newPassword, groupInfoEntity.getPassword())) {
+                groupInfoEntity.setPassword(Md5Utils.addSalt(newPassword, groupInfoEntity.getSalt()).getPassword());
+            }
+
+            // 更新数据库
+            groupInfoMapper.update(groupInfoEntity);
+        }
 
     }
 
