@@ -1,8 +1,10 @@
 package com.eduhk.alic.alicbackend.controller;
 
 import cn.hutool.json.JSONObject;
+import com.eduhk.alic.alicbackend.common.constant.ResultCode;
 import com.eduhk.alic.alicbackend.model.vo.*;
 import com.eduhk.alic.alicbackend.service.GroupSearchService;
+import com.eduhk.alic.alicbackend.service.GroupUserService;
 import com.eduhk.alic.alicbackend.service.TagManageService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,9 @@ public class TagController {
 
     @Resource
     GroupSearchService groupSearchService;
+
+    @Resource
+    GroupUserService groupUserService;
 
     @PostMapping("/add_tag")
     public Result addTag(@Validated @RequestBody TagNameVO TagName, @RequestAttribute("userId") Long userId) {
@@ -74,4 +79,11 @@ public class TagController {
         tagManageService.verifyUserAdmission(userId, groupTagSearchVO.getTagId());
         return ResultResp.success(groupSearchService.searchGroupForTag(userId, groupTagSearchVO.getTagId(),groupTagSearchVO.getKeyword()));
     }
+    @GetMapping("/get_tag_binded_group_list")
+    public Result getTagBindedGroupList(@RequestParam("groupId") @NotNull(message = "groupId cannot be null")
+                                            @Min(value = 1, message = "groupId must be greater than 0")Long groupId,
+                                        @RequestAttribute("userId") Long userId) {
+        return ResultResp.success(tagManageService.getTagsByGroupId(groupId));
+    }
+
 }

@@ -45,4 +45,13 @@ public interface TagInfoMapper extends BaseMapper<TagInfoEntity> {
     @Delete("DELETE FROM chat_tag WHERE tag_id = #{tagId}")
     int deleteById(@Param("tagId") Long tagId);
 
+    @Select("""
+        SELECT t.*
+        FROM chat_tag t
+        JOIN chat_tag_group_relation r ON t.tag_id = r.tag_id
+        WHERE r.group_id = #{groupId}
+          AND t.tag_condition = 1
+    """)
+    List<TagInfoEntity> getTagsByGroupId(@Param("groupId") Long groupId);
+
 }

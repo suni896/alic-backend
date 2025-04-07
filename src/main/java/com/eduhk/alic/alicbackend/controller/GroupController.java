@@ -137,9 +137,23 @@ public class GroupController {
     public Result getRoleInGroup(@RequestParam("groupId") @NotNull(message = "groupId cannot be null")
                                      @Min(value = 1, message = "groupId must be greater than 0")Long groupId,
                                  @RequestAttribute("userId") Long userId) {
+        Boolean isExist = groupUserService.verifyUserExistInGroup(groupId, userId);
+        if (!isExist) {
+            return ResultResp.failure(ResultCode.USER_NOT_IN_GROUP);
+        }
         GroupMemberType type = groupUserService.getGroupMemberType(groupId, userId);
         return ResultResp.success(type);
     }
+
+    @GetMapping("/get_is_existing_in_group")
+    public Result getIsExistingInGroup(@RequestParam("groupId") @NotNull(message = "groupId cannot be null")
+                                 @Min(value = 1, message = "groupId must be greater than 0")Long groupId,
+                                 @RequestAttribute("userId") Long userId) {
+        groupUserService.verfiyGroupExisting(groupId);
+        boolean isExist = groupUserService.verifyUserExistInGroup(groupId, userId);
+        return ResultResp.success(isExist ? 1 : 0);
+    }
+
     //添加成员
     @PostMapping("/add_group_member")
     public Result addGroupMember(@Validated @RequestBody GroupJoinVO groupJoinVO,
@@ -151,7 +165,7 @@ public class GroupController {
         }
         //admin可添加member（预留逻辑）, member可添加自己
         groupUserService.verifyGroupAuth(groupJoinVO, userId);
-        //被移除人是否在群里
+        //被添加人是否在群里
         Boolean isExist = groupUserService.verifyUserExistInGroup(groupJoinVO.getGroupId(), groupJoinVO.getJoinMemberID());
         if (isExist) {
             return ResultResp.failure(ResultCode.USER_ALREADY_IN_GROUP);

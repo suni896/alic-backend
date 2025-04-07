@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
 public class BotManagementService {
     private static final String AZURE_OPENAI_ENDPOINT = "https://basgpt.openai.azure.com";
     private static final String API_VERSION = "2024-05-01-preview";
-    private static final String API_KEY = "";
+    private static final String API_KEY = "d6c04fcfaeb0457d9d8910d508ffa189";
     private static final String model = "EDUAI";
     private static final WebClient webClient = WebClient.builder()
             .baseUrl(AZURE_OPENAI_ENDPOINT)
@@ -40,15 +40,15 @@ public class BotManagementService {
                 .doOnError(error -> log.error("Assistant 创建失败: {}", error.getMessage()));
     }
 
-    public Mono<Void> deleteAssistant(String assistantId) {
-
-        return webClient.delete()
-                .uri("/openai/assistants/" + assistantId + "?api-version=" + API_VERSION)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .doOnSuccess(unused -> log.info("Deleted Assistant ID: " + assistantId))
-                .doOnError(error -> log.error("Failed to delete Assistant ID: " + assistantId, error));
-    }
+//    public Mono<Void> deleteAssistant(String assistantId) {
+//
+//        return webClient.delete()
+//                .uri("/openai/assistants/" + assistantId + "?api-version=" + API_VERSION)
+//                .retrieve()
+//                .bodyToMono(Void.class)
+//                .doOnSuccess(unused -> log.info("Deleted Assistant ID: " + assistantId))
+//                .doOnError(error -> log.error("Failed to delete Assistant ID: " + assistantId, error));
+//    }
 
     public Mono<String> modifyAssistant(String assistantId, String prompt) {
         String requestBody = """
@@ -56,7 +56,9 @@ public class BotManagementService {
             "instructions": "%s"
         }
         """.formatted(prompt, model);
-        return webClient.post().uri("/openai/assistants/" + assistantId + "?api-version=" + API_VERSION).bodyValue(requestBody)
+        return webClient.post()
+                .uri("/openai/assistants/" + assistantId + "?api-version=" + API_VERSION)
+                .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(CreateAssistantResponseVO.class)
                 .map(CreateAssistantResponseVO::getId)

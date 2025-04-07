@@ -115,6 +115,13 @@ public class GroupUserService {
             return GroupMemberType.MEMBER;
         }
     }
+
+    public void verfiyGroupExisting(Long groupId) {
+        GroupInfoEntity groupInfoEntity = groupInfoMapper.selectById(groupId);
+        if (groupInfoEntity == null) {
+            throw new BaseException(ResultCode.GROUP_NOT_EXIST);
+        }
+    }
     public void addGroupMember(Long groupId, Long userId) {
         ChatGroupUserEntity info = new ChatGroupUserEntity();
         info.setGroupId(groupId);

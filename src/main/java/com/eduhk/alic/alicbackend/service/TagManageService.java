@@ -120,4 +120,15 @@ public class TagManageService {
         return pageTagInfoVO;
     }
 
+    public List<TagInfoVO> getTagsByGroupId(Long groupId) {
+        List<TagInfoEntity> tagInfoEntities =  tagInfoMapper.getTagsByGroupId(groupId);
+        List<TagInfoVO> tagInfoVOS = tagInfoEntities.stream().map(tagInfoEntity -> {
+            TagInfoVO tagInfoVO = new TagInfoVO();
+            tagInfoVO.setTagName(tagInfoEntity.getTagName());
+            tagInfoVO.setTagId(tagInfoEntity.getTagId());
+            return tagInfoVO;
+        }).toList();
+        return tagInfoVOS;
+    }
+
 }
